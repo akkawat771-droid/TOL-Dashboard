@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOL True Shop WW — KPI Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="data.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: rgba(0,0,0,0.10);
+    --text: #1a1a1a;
+    --text2: #5c5c5c;
+    --text3: #9a9a9a;
+    --green: #0f7c5a;
+    --amber: #c47b0a;
+    --red: #c0392b;
+    --blue: #1a6fb5;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: 'Sarabun', 'Noto Sans Thai', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .header-left h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+  .header-left p {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 1px;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+    margin-left: 6px;
+  }
+  .badge-blue {
+    background: #e3f0fb;
+    color: #0c4578;
+    border-color: #90c4ef;
+  }
+
+  /* ── Layout ── */
+  .main { padding: 16px 24px 32px; max-width: 1400px; margin: 0 auto; }
+
+  /* ── Filter Bar ── */
+  .filter-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 12px 16px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 16px;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 3px; }
+  .filter-group label { font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+  .filter-group select {
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    min-width: 160px;
+    max-width: 220px;
+  }
+  .filter-group select:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+  .btn-reset {
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text2);
+    cursor: pointer;
+    align-self: flex-end;
+    transition: background 0.15s;
+  }
+  .btn-reset:hover { background: #e8e6e0; }
+
+  /* ── Metrics ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .metric-label { font-size: 11px; color: var(--text2); font-weight: 500; }
+  .metric-value { font-size: 26px; font-weight: 700; margin: 2px 0; letter-spacing: -0.5px; }
+  .metric-sub { font-size: 10px; color: var(--text3); }
+  .green { color: var(--green); }
+  .amber { color: var(--amber); }
+  .red { color: var(--red); }
+
+  /* ── Chart Grid ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .grid-1 { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .chart-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chart-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text2);
+  }
+  .chart-wrap { position: relative; width: 100%; }
+  .h155 { height: 155px; }
+  .h280 { height: 280px; }
+  .h220 { height: 220px; }
+  .h160 { height: 160px; }
+  .h310 { height: 310px; }
+
+  /* ── Insights ── */
+  .insights { margin-top: 4px; }
+  .insight {
+    padding: 10px 14px;
+    border-left: 3px solid;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .insight-red { border-color: #c0392b; background: #fdf2f1; }
+  .insight-amber { border-color: #c47b0a; background: #fdf8ee; }
+  .insight-green { border-color: #0f7c5a; background: #f0faf6; }
+  .action-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 8px;
+    background: #e3f0fb;
+    color: #0c4578;
+    margin: 3px 3px 0 0;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 20px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: var(--blue);
+    border-radius: 2px;
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text3);
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .main { padding: 12px 12px 24px; }
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .header { padding: 10px 14px; }
+    .metric-value { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>TOL True Shop WW — KPI Dashboard</h1>
+    <p>Data as of <strong>23 มิถุนายน 2026</strong>
+      <span class="badge">FLAG_KPI = KPI</span>
+      <span class="badge badge-blue">SUBS_STATUS = Connect</span>
+    </p>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <span style="font-size:11px;color:var(--text2);padding-bottom:4px;white-space:nowrap;font-weight:600;">
+      &#9660; Filter
+    </span>
+    <div class="filter-group">
+      <label>Region WW</label>
+      <select id="fR" onchange="onRegion()"></select>
+    </div>
+    <div class="filter-group">
+      <label>Partner Name</label>
+      <select id="fP" onchange="onPartner()"></select>
+    </div>
+    <div class="filter-group">
+      <label>Sale Represent</label>
+      <select id="fS" onchange="render()"></select>
+    </div>
+    <button class="btn-reset" onclick="resetF()">Reset ↺</button>
+  </div>
+
+  <!-- Metrics Banner -->
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="metric-label">ยอด Register</div>
+      <div class="metric-value" id="mR">—</div>
+      <div class="metric-sub">TOL-REGISTER</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">ยอด Connect</div>
+      <div class="metric-value green" id="mC">—</div>
+      <div class="metric-sub">TOL-CONNECT</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Pending</div>
+      <div class="metric-value amber" id="mPe">—</div>
+      <div class="metric-sub">SUBS_STATUS</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Cancel</div>
+      <div class="metric-value red" id="mCa">—</div>
+      <div class="metric-sub">SUBS_STATUS</div>
+    </div>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">1</span>TOL-REGISTER รายวัน (มิ.ย. 2026)</div>
+      <div class="chart-wrap h155"><canvas id="c1" role="img" aria-label="Register daily">Register daily</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">2</span>TOL-CONNECT รายวัน (มิ.ย. 2026)</div>
+      <div class="chart-wrap h155"><canvas id="c2" role="img" aria-label="Connect daily">Connect daily</canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">3</span>Cancel Rate % ตาม Region WW</div>
+      <div class="chart-wrap h310"><canvas id="c3" role="img" aria-label="Cancel rate by region">Cancel rate</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">4</span>Pending Rate % ตาม Region WW</div>
+      <div class="chart-wrap h310"><canvas id="c4" role="img" aria-label="Pending rate by region">Pending rate</canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 3 -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">5</span>แพ็กเกจยอดนิยม Top 5 (KPI + Connect)</div>
+      <div class="chart-wrap h220"><canvas id="c5" role="img" aria-label="Top 5 packages">Top packages</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">6</span>Top 5 Partner — TOL-CONNECT</div>
+      <div class="chart-wrap h220"><canvas id="c6" role="img" aria-label="Top 5 partner connect">Top partner connect</canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 4 -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">7</span>Pending แยกรายวัน (มิ.ย. 2026)</div>
+      <div class="chart-wrap h155"><canvas id="c7" role="img" aria-label="Pending daily">Pending daily</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">8</span>Top 10 Partner — Cancel (KPI)</div>
+      <div class="chart-wrap h155"><canvas id="c8" role="img" aria-label="Top 10 cancel partner">Top cancel partner</canvas></div>
+    </div>
+  </div>
+
+  <!-- Chart 9 -->
+  <div class="grid-1">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">9</span>TOL-REGISTER ที่รอติดตั้ง (Pending) ในเดือนกรกฎาคม ตาม Region WW</div>
+      <div class="chart-wrap h280"><canvas id="c9" role="img" aria-label="July pending by region">July pending by region</canvas></div>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="section-title">สรุปวิเคราะห์และข้อแนะนำ</div>
+  <div class="insights">
+    <div class="insight insight-red">
+      <strong>UPC - Central Northeast Cancel Rate 10.1% — สูงสุดในระบบ</strong><br>
+      สูงกว่าค่าเฉลี่ย KPI (~5.5%) เกือบ 2 เท่า ชี้ปัญหาเชิงระบบ ไม่ใช่เหตุสุ่ม ต้นเหตุอาจเป็น False Promise ด้าน Coverage หรือ Speed
+      <br><span class="action-tag">Action</span> Audit Sale ใน Region นี้เร่งด่วน ตรวจ Coverage Map ก่อน Commit และพิจารณา Soft Block พื้นที่ที่ไม่พร้อม
+    </div>
+    <div class="insight insight-red">
+      <strong>WW Central พลาซา อุบลฯ Cancel 34 ราย — Top Cancel Partner</strong><br>
+      สาขา UPC ครองอันดับ 1-3 ของ Cancel (อุบลฯ ปากช่อง ขอนแก่น) สะท้อนปัญหา Network Readiness ใน UPC Region
+      <br><span class="action-tag">Action</span> กำหนด Pre-feasibility Check ทุก Order ใน UPC และตรวจสอบ FTTH Readiness Map ก่อนเปิด Quota ขาย
+    </div>
+    <div class="insight insight-red">
+      <strong>Pending กรกฎาคม ยังค้าง 60 ราย — BMA V มากสุด 13 ราย</strong><br>
+      งาน Pending ข้ามเดือนเสี่ยงสูงที่จะ Drop เป็น Cancel หากลูกค้าไม่ได้รับการติดตาม
+      <br><span class="action-tag">Action</span> War Room รายวันสำหรับ July Backlog ให้ช่างติดตั้ง Priority นี้ก่อนรับ Order ใหม่
+    </div>
+    <div class="insight insight-amber">
+      <strong>Pending พุ่ง 238 ราย วันที่ 24 มิ.ย. — Single-day Peak</strong><br>
+      Register สูงต่อเนื่อง 15-23 มิ.ย. แต่ Dispatch ไม่ทัน ทำให้ Queue ล้น
+      <br><span class="action-tag">Action</span> ตั้ง Alert เมื่อ Daily Register &gt;260 ราย และวางแผน Surge Capacity ล่วงหน้า
+    </div>
+    <div class="insight insight-amber">
+      <strong>UPC - East Pending Rate 10.1% และ Cancel Rate 8.0% — สูงทั้งคู่</strong><br>
+      Region เดียวที่มีทั้ง Pending และ Cancel สูงพร้อมกัน แสดงว่าลูกค้ารอนานแล้วก็ยังยกเลิก
+      <br><span class="action-tag">Action</span> กำหนด SLA Pending ≤3 วันใน UPC-East และ Proactive Call ลูกค้า Pending ก่อน Cancel
+    </div>
+    <div class="insight insight-green">
+      <strong>WW Central เฟสติวัล ภูเก็ต Top Connect Partner (133 ราย)</strong><br>
+      Top 5 Connect Partner ล้วนเป็น BMA + ภูเก็ต ที่มี Walk-in Traffic สูงและ Sales Execution แข็งแกร่ง
+      <br><span class="action-tag">Action</span> นำ Sales Playbook ของ Top Partner ไป Rollout ใน UPC ที่ Underperform โดยเฉพาะ Central NE
+    </div>
+    <div class="insight insight-green">
+      <strong>Gigatex 500/500 CT24 ครอง Top Seller (1,214 ราย) — CCTV Bundle อันดับ 2 (628 ราย)</strong><br>
+      Bundle CCTV+FTTH เติบโตดีชี้ว่า Upsell Bundle ได้ผล และลูกค้าต้องการ Security Solution
+      <br><span class="action-tag">Action</span> Push Bundle CCTV เป็น Default Upsell Offer และเพิ่ม Incentive ให้ Sale ที่ขาย Bundle ได้
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  TOL True Shop WW KPI Dashboard &nbsp;|&nbsp; Data as of 23 มิถุนายน 2026 &nbsp;|&nbsp; FLAG_KPI = KPI
+</footer>
+
+<script>
+const L30 = Array.from({length:30}, (_,i) => String(i+1));
+const L23 = Array.from({length:23}, (_,i) => String(i+1));
+const ch = {};
+
+function mk(id, type, labels, data, color, opts={}) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (ch[id]) ch[id].destroy();
+  const isH = opts.ia === 'y';
+  ch[id] = new Chart(ctx, {
+    type,
+    data: { labels, datasets: [{ label: '', data,
+      backgroundColor: color, borderColor: color,
+      borderWidth: type === 'line' ? 2 : 0,
+      borderRadius: type === 'bar' ? 3 : 0,
+      fill: type === 'line' ? 'origin' : false,
+      tension: 0.3, pointRadius: type === 'line' ? 2 : 0
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => opts.pct
+          ? (typeof c.raw === 'number' ? c.raw.toFixed(1) : '0') + '%'
+          : Number(c.raw).toLocaleString() }}},
+      indexAxis: opts.ia || 'x',
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#888', maxRotation: 0,
+                callback: isH && opts.pct ? v => v + '%' : undefined },
+             grid: { display: isH, color: 'rgba(0,0,0,0.05)' }},
+        y: { ticks: { font: { size: 10 }, color: '#888',
+                callback: !isH && opts.pct ? v => v + '%' : undefined },
+             grid: { display: !isH, color: 'rgba(0,0,0,0.05)' }}
+      }
+    }
+  });
+}
+
+function render() {
+  const rgn = document.getElementById('fR').value;
+  const d = rgn && AGG.region[rgn] ? AGG.region[rgn] : AGG.global;
+
+  document.getElementById('mR').textContent = d.reg.toLocaleString();
+  document.getElementById('mC').textContent = d.con.toLocaleString();
+  document.getElementById('mPe').textContent = d.pend.toLocaleString();
+  document.getElementById('mCa').textContent = d.canc.toLocaleString();
+
+  mk('c1', 'bar',  L30, d.c1, '#1a6fb5');
+  mk('c2', 'line', L23.slice(0, d.c2.length), d.c2, '#0f7c5a');
+
+  const c3l = d.c3l.filter(l => l !== '');
+  const c3v = d.c3v.filter((_, i) => d.c3l[i] !== '');
+  mk('c3', 'bar', c3l, c3v, c3v.map(v => v >= 8 ? '#c0392b' : v >= 6 ? '#c47b0a' : '#4a90d9'), {ia:'y', pct:true});
+
+  const c4l = d.c4l.filter(l => l !== '');
+  const c4v = d.c4v.filter((_, i) => d.c4l[i] !== '');
+  mk('c4', 'bar', c4l, c4v, c4v.map(v => v >= 10 ? '#c0392b' : v >= 8 ? '#c47b0a' : '#e8a838'), {ia:'y', pct:true});
+
+  mk('c5', 'bar', d.c5l, d.c5v, '#7c6fc4', {ia:'y'});
+  mk('c6', 'bar', d.c6l, d.c6v, '#1d9e75', {ia:'y'});
+  mk('c7', 'bar', L30, d.c7, d.c7.map(v => v >= 100 ? '#c0392b' : v >= 20 ? '#c47b0a' : '#e8a838'));
+  if (d.c8l && d.c8l.length)
+    mk('c8', 'bar', d.c8l, d.c8v, d.c8v.map(v => v >= 20 ? '#c0392b' : v >= 10 ? '#c47b0a' : '#4a90d9'), {ia:'y'});
+  if (d.c9l && d.c9l.length)
+    mk('c9', 'bar', d.c9l, d.c9v, d.c9v.map(v => v >= 10 ? '#c0392b' : v >= 5 ? '#c47b0a' : '#4a90d9'), {ia:'y'});
+}
+
+function initRegion() {
+  const s = document.getElementById('fR');
+  s.innerHTML = '<option value="">— ทั้งหมด —</option>' +
+    Object.keys(AGG.region).sort().map(r => `<option>${r}</option>`).join('');
+}
+
+function onRegion() {
+  const rgn = document.getElementById('fR').value;
+  const pSel = document.getElementById('fP');
+  const pts = rgn ? AGG.rp[rgn] || []
+    : Object.values(AGG.rp).flat().filter((v,i,a) => a.indexOf(v) === i).sort();
+  pSel.innerHTML = '<option value="">— ทั้งหมด —</option>' +
+    pts.map(p => `<option>${p}</option>`).join('');
+  onPartner();
+}
+
+function onPartner() {
+  const p = document.getElementById('fP').value;
+  const rgn = document.getElementById('fR').value;
+  const sSel = document.getElementById('fS');
+  let sales = [];
+  if (p) {
+    sales = AGG.ps[p] || [];
+  } else if (rgn) {
+    const s = new Set();
+    (AGG.rp[rgn] || []).forEach(pt => (AGG.ps[pt] || []).forEach(sl => s.add(sl)));
+    sales = Array.from(s).sort();
+  } else {
+    const s = new Set();
+    Object.values(AGG.ps).forEach(a => a.forEach(sl => s.add(sl)));
+    sales = Array.from(s).sort().slice(0, 80);
+  }
+  sSel.innerHTML = '<option value="">— ทั้งหมด —</option>' +
+    sales.map(sl => `<option>${sl}</option>`).join('');
+  render();
+}
+
+function resetF() {
+  document.getElementById('fR').value = '';
+  onRegion();
+}
+
+initRegion();
+onRegion();
+</script>
+</body>
+</html>

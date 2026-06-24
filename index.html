@@ -305,7 +305,7 @@
   <!-- Charts Row 1 -->
   <div class="grid-2">
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">1</span>TOL-REGISTER รายวัน (มิ.ย. 2026)</div>
+      <div class="chart-title"><span class="chart-num">1</span>TOL-REGISTER รายวัน — วันที่ Register (มิ.ย. 2026)</div>
       <div class="chart-wrap h155"><canvas id="c1" role="img" aria-label="Register daily">Register daily</canvas></div>
     </div>
     <div class="chart-card">
@@ -407,6 +407,7 @@
 <script>
 const L30 = Array.from({length:30}, (_,i) => String(i+1));
 const L23 = Array.from({length:23}, (_,i) => String(i+1));
+const REGL = (AGG.regLabels || Array.from({length:23}, (_,i) => String(i+1)));
 const ch = {};
 
 function mk(id, type, labels, data, color, opts={}) {
@@ -451,7 +452,7 @@ function render() {
   document.getElementById('mPe').textContent = d.pend.toLocaleString();
   document.getElementById('mCa').textContent = d.canc.toLocaleString();
 
-  mk('c1', 'bar',  L30, d.c1, '#1a6fb5');
+  mk('c1', 'bar',  REGL.slice(0, d.c1.length), d.c1, '#1a6fb5');
   mk('c2', 'line', L23.slice(0, d.c2.length), d.c2, '#0f7c5a');
 
   const c3l = d.c3l.filter(l => l !== '');

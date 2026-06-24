@@ -433,10 +433,10 @@ function mk(id, type, labels, data, color, opts={}) {
       indexAxis: opts.ia || 'x',
       scales: {
         x: { ticks: { font: { size: 10 }, color: '#888', maxRotation: 0,
-                callback: isH && opts.pct ? v => v + '%' : undefined },
+                callback: isH && opts.pct ? v => v + '%' : function(val, idx) { return labels[idx] !== undefined ? labels[idx] : val; } },
              grid: { display: isH, color: 'rgba(0,0,0,0.05)' }},
         y: { ticks: { font: { size: 10 }, color: '#888',
-                callback: !isH && opts.pct ? v => v + '%' : undefined },
+                callback: !isH && opts.pct ? v => v + '%' : function(val, idx) { return labels[idx] !== undefined ? labels[idx] : val; } },
              grid: { display: !isH, color: 'rgba(0,0,0,0.05)' }}
       }
     }

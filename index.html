@@ -360,42 +360,8 @@
 
   <!-- Insights -->
   <div class="section-title">สรุปวิเคราะห์และข้อแนะนำ</div>
-  <div class="insights">
-    <div class="insight insight-red">
-      <strong>UPC - Central Northeast Cancel Rate 10.1% — สูงสุดในระบบ</strong><br>
-      สูงกว่าค่าเฉลี่ย KPI (~5.5%) เกือบ 2 เท่า ชี้ปัญหาเชิงระบบ ไม่ใช่เหตุสุ่ม ต้นเหตุอาจเป็น False Promise ด้าน Coverage หรือ Speed
-      <br><span class="action-tag">Action</span> Audit Sale ใน Region นี้เร่งด่วน ตรวจ Coverage Map ก่อน Commit และพิจารณา Soft Block พื้นที่ที่ไม่พร้อม
-    </div>
-    <div class="insight insight-red">
-      <strong>WW Central พลาซา อุบลฯ Cancel 34 ราย — Top Cancel Partner</strong><br>
-      สาขา UPC ครองอันดับ 1-3 ของ Cancel (อุบลฯ ปากช่อง ขอนแก่น) สะท้อนปัญหา Network Readiness ใน UPC Region
-      <br><span class="action-tag">Action</span> กำหนด Pre-feasibility Check ทุก Order ใน UPC และตรวจสอบ FTTH Readiness Map ก่อนเปิด Quota ขาย
-    </div>
-    <div class="insight insight-red">
-      <strong>Pending กรกฎาคม ยังค้าง 60 ราย — BMA V มากสุด 13 ราย</strong><br>
-      งาน Pending ข้ามเดือนเสี่ยงสูงที่จะ Drop เป็น Cancel หากลูกค้าไม่ได้รับการติดตาม
-      <br><span class="action-tag">Action</span> War Room รายวันสำหรับ July Backlog ให้ช่างติดตั้ง Priority นี้ก่อนรับ Order ใหม่
-    </div>
-    <div class="insight insight-amber">
-      <strong>Pending พุ่ง 238 ราย วันที่ 24 มิ.ย. — Single-day Peak</strong><br>
-      Register สูงต่อเนื่อง 15-23 มิ.ย. แต่ Dispatch ไม่ทัน ทำให้ Queue ล้น
-      <br><span class="action-tag">Action</span> ตั้ง Alert เมื่อ Daily Register &gt;260 ราย และวางแผน Surge Capacity ล่วงหน้า
-    </div>
-    <div class="insight insight-amber">
-      <strong>UPC - East Pending Rate 10.1% และ Cancel Rate 8.0% — สูงทั้งคู่</strong><br>
-      Region เดียวที่มีทั้ง Pending และ Cancel สูงพร้อมกัน แสดงว่าลูกค้ารอนานแล้วก็ยังยกเลิก
-      <br><span class="action-tag">Action</span> กำหนด SLA Pending ≤3 วันใน UPC-East และ Proactive Call ลูกค้า Pending ก่อน Cancel
-    </div>
-    <div class="insight insight-green">
-      <strong>WW Central เฟสติวัล ภูเก็ต Top Connect Partner (133 ราย)</strong><br>
-      Top 5 Connect Partner ล้วนเป็น BMA + ภูเก็ต ที่มี Walk-in Traffic สูงและ Sales Execution แข็งแกร่ง
-      <br><span class="action-tag">Action</span> นำ Sales Playbook ของ Top Partner ไป Rollout ใน UPC ที่ Underperform โดยเฉพาะ Central NE
-    </div>
-    <div class="insight insight-green">
-      <strong>Gigatex 500/500 CT24 ครอง Top Seller (1,214 ราย) — CCTV Bundle อันดับ 2 (628 ราย)</strong><br>
-      Bundle CCTV+FTTH เติบโตดีชี้ว่า Upsell Bundle ได้ผล และลูกค้าต้องการ Security Solution
-      <br><span class="action-tag">Action</span> Push Bundle CCTV เป็น Default Upsell Offer และเพิ่ม Incentive ให้ Sale ที่ขาย Bundle ได้
-    </div>
+  <div class="insights" id="insightBox">
+    <!-- Dynamic insights rendered by JS -->
   </div>
 
 </main>
@@ -405,10 +371,10 @@
 </footer>
 
 <script>
-const L30 = Array.from({length:30}, (_,i) => String(i+1));
-const L23 = Array.from({length:23}, (_,i) => String(i+1));
-const REGL = (AGG.regLabels || Array.from({length:23}, (_,i) => String(i+1)));
-const ch = {};
+const L30  = Array.from({length:30}, (_,i) => String(i+1));
+const L23  = Array.from({length:23}, (_,i) => String(i+1));
+const REGL = AGG.regLabels || L23;
+const ch   = {};
 
 function mk(id, type, labels, data, color, opts={}) {
   const ctx = document.getElementById(id);
@@ -417,95 +383,135 @@ function mk(id, type, labels, data, color, opts={}) {
   const isH = opts.ia === 'y';
   ch[id] = new Chart(ctx, {
     type,
-    data: { labels, datasets: [{ label: '', data,
+    data: { labels, datasets: [{ label:'', data,
       backgroundColor: color, borderColor: color,
-      borderWidth: type === 'line' ? 2 : 0,
-      borderRadius: type === 'bar' ? 3 : 0,
-      fill: type === 'line' ? 'origin' : false,
-      tension: 0.3, pointRadius: type === 'line' ? 2 : 0
+      borderWidth: type==='line' ? 2 : 0,
+      borderRadius: type==='bar'  ? 3 : 0,
+      fill: type==='line' ? 'origin' : false,
+      tension: 0.3, pointRadius: type==='line' ? 2 : 0
     }]},
     options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false },
-        tooltip: { callbacks: { label: c => opts.pct
-          ? (typeof c.raw === 'number' ? c.raw.toFixed(1) : '0') + '%'
-          : Number(c.raw).toLocaleString() }}},
-      indexAxis: opts.ia || 'x',
-      scales: {
-        x: { ticks: { font: { size: 10 }, color: '#888', maxRotation: 0,
-                callback: isH && opts.pct ? v => v + '%' : function(val, idx) { return labels[idx] !== undefined ? labels[idx] : val; } },
-             grid: { display: isH, color: 'rgba(0,0,0,0.05)' }},
-        y: { ticks: { font: { size: 10 }, color: '#888',
-                callback: !isH && opts.pct ? v => v + '%' : function(val, idx) { return labels[idx] !== undefined ? labels[idx] : val; } },
-             grid: { display: !isH, color: 'rgba(0,0,0,0.05)' }}
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false},
+        tooltip:{callbacks:{label: c => opts.pct
+          ? (typeof c.raw==='number' ? c.raw.toFixed(1):'0')+'%'
+          : Number(c.raw).toLocaleString()}}},
+      indexAxis: opts.ia||'x',
+      scales:{
+        x:{ ticks:{font:{size:10},color:'#888',maxRotation:0,
+              callback: isH && opts.pct ? v=>v+'%' : function(val,idx){return labels[idx]!==undefined?labels[idx]:val;}},
+            grid:{display:isH,color:'rgba(0,0,0,0.05)'}},
+        y:{ ticks:{font:{size:10},color:'#888',
+              callback: !isH && opts.pct ? v=>v+'%' : function(val,idx){return labels[idx]!==undefined?labels[idx]:val;}},
+            grid:{display:!isH,color:'rgba(0,0,0,0.05)'}}
       }
     }
   });
 }
 
-function render() {
+function getDataset() {
   const rgn = document.getElementById('fR').value;
-  const d = rgn && AGG.region[rgn] ? AGG.region[rgn] : AGG.global;
+  const ptn = document.getElementById('fP').value;
+  const sal = document.getElementById('fS').value;
 
-  document.getElementById('mR').textContent = d.reg.toLocaleString();
-  document.getElementById('mC').textContent = d.con.toLocaleString();
+  let d;
+  if (ptn && AGG.partner[ptn]) {
+    d = Object.assign({}, AGG.partner[ptn]);
+  } else if (rgn && AGG.region[rgn]) {
+    d = Object.assign({}, AGG.region[rgn]);
+  } else {
+    d = Object.assign({}, AGG.global);
+  }
+
+  // If sale is selected, override banner metrics from sale slim data
+  if (sal && AGG.sale[sal]) {
+    const s = AGG.sale[sal];
+    d = Object.assign({}, d, {reg:s.reg, con:s.con, pend:s.pend, canc:s.canc});
+  }
+  return d;
+}
+
+function render() {
+  const d = getDataset();
+
+  document.getElementById('mR').textContent  = d.reg.toLocaleString();
+  document.getElementById('mC').textContent  = d.con.toLocaleString();
   document.getElementById('mPe').textContent = d.pend.toLocaleString();
   document.getElementById('mCa').textContent = d.canc.toLocaleString();
 
-  mk('c1', 'bar',  REGL.slice(0, d.c1.length), d.c1, '#1a6fb5');
-  mk('c2', 'line', L23.slice(0, d.c2.length), d.c2, '#0f7c5a');
+  mk('c1','bar',  REGL.slice(0,d.c1.length), d.c1, '#1a6fb5');
+  mk('c2','line', L23.slice(0,d.c2.length),  d.c2, '#0f7c5a');
 
-  const c3l = d.c3l.filter(l => l !== '');
-  const c3v = d.c3v.filter((_, i) => d.c3l[i] !== '');
-  mk('c3', 'bar', c3l, c3v, c3v.map(v => v >= 8 ? '#c0392b' : v >= 6 ? '#c47b0a' : '#4a90d9'), {ia:'y', pct:true});
+  const c3l=d.c3l.filter(l=>l);
+  const c3v=d.c3v.filter((_,i)=>d.c3l[i]);
+  mk('c3','bar',c3l,c3v,c3v.map(v=>v>=8?'#c0392b':v>=6?'#c47b0a':'#4a90d9'),{ia:'y',pct:true});
 
-  const c4l = d.c4l.filter(l => l !== '');
-  const c4v = d.c4v.filter((_, i) => d.c4l[i] !== '');
-  mk('c4', 'bar', c4l, c4v, c4v.map(v => v >= 10 ? '#c0392b' : v >= 8 ? '#c47b0a' : '#e8a838'), {ia:'y', pct:true});
+  const c4l=d.c4l.filter(l=>l);
+  const c4v=d.c4v.filter((_,i)=>d.c4l[i]);
+  mk('c4','bar',c4l,c4v,c4v.map(v=>v>=10?'#c0392b':v>=8?'#c47b0a':'#e8a838'),{ia:'y',pct:true});
 
-  mk('c5', 'bar', d.c5l, d.c5v, '#7c6fc4', {ia:'y'});
-  mk('c6', 'bar', d.c6l, d.c6v, '#1d9e75', {ia:'y'});
-  mk('c7', 'bar', L30, d.c7, d.c7.map(v => v >= 100 ? '#c0392b' : v >= 20 ? '#c47b0a' : '#e8a838'));
-  if (d.c8l && d.c8l.length)
-    mk('c8', 'bar', d.c8l, d.c8v, d.c8v.map(v => v >= 20 ? '#c0392b' : v >= 10 ? '#c47b0a' : '#4a90d9'), {ia:'y'});
-  if (d.c9l && d.c9l.length)
-    mk('c9', 'bar', d.c9l, d.c9v, d.c9v.map(v => v >= 10 ? '#c0392b' : v >= 5 ? '#c47b0a' : '#4a90d9'), {ia:'y'});
+  mk('c5','bar',d.c5l,d.c5v,'#7c6fc4',{ia:'y'});
+  mk('c6','bar',d.c6l,d.c6v,'#1d9e75',{ia:'y'});
+  mk('c7','bar',L30,d.c7,d.c7.map(v=>v>=100?'#c0392b':v>=20?'#c47b0a':'#e8a838'));
+
+  if(d.c8l&&d.c8l.length)
+    mk('c8','bar',d.c8l,d.c8v,d.c8v.map(v=>v>=20?'#c0392b':v>=10?'#c47b0a':'#4a90d9'),{ia:'y'});
+
+  if(d.c9l&&d.c9l.length)
+    mk('c9','bar',d.c9l,d.c9v,d.c9v.map(v=>v>=10?'#c0392b':v>=5?'#c47b0a':'#4a90d9'),{ia:'y'});
+
+  renderInsights(d.ins||[]);
+}
+
+const TYPE_CLASS = {danger:'insight-red', amber:'insight-amber', green:'insight-green'};
+
+function renderInsights(ins) {
+  const box = document.getElementById('insightBox');
+  if (!ins || ins.length===0) {
+    box.innerHTML = '<div class="insight insight-green"><strong>ไม่พบประเด็นที่น่ากังวล</strong><br>ข้อมูลในช่วงที่เลือกอยู่ในเกณฑ์ปกติ</div>';
+    return;
+  }
+  box.innerHTML = ins.map(i => `
+    <div class="insight ${TYPE_CLASS[i.t]||'insight-amber'}">
+      <strong>${i.h}</strong><br>${i.b}
+      <br><span class="action-tag">Action</span> ${i.a}
+    </div>`).join('');
 }
 
 function initRegion() {
   const s = document.getElementById('fR');
   s.innerHTML = '<option value="">— ทั้งหมด —</option>' +
-    Object.keys(AGG.region).sort().map(r => `<option>${r}</option>`).join('');
+    Object.keys(AGG.region).sort().map(r=>`<option>${r}</option>`).join('');
 }
 
 function onRegion() {
   const rgn = document.getElementById('fR').value;
   const pSel = document.getElementById('fP');
-  const pts = rgn ? AGG.rp[rgn] || []
-    : Object.values(AGG.rp).flat().filter((v,i,a) => a.indexOf(v) === i).sort();
+  const pts = rgn ? AGG.rp[rgn]||[]
+    : Object.values(AGG.rp).flat().filter((v,i,a)=>a.indexOf(v)===i).sort();
   pSel.innerHTML = '<option value="">— ทั้งหมด —</option>' +
-    pts.map(p => `<option>${p}</option>`).join('');
+    pts.map(p=>`<option>${p}</option>`).join('');
   onPartner();
 }
 
 function onPartner() {
-  const p = document.getElementById('fP').value;
+  const p   = document.getElementById('fP').value;
   const rgn = document.getElementById('fR').value;
   const sSel = document.getElementById('fS');
   let sales = [];
   if (p) {
-    sales = AGG.ps[p] || [];
+    sales = AGG.ps[p]||[];
   } else if (rgn) {
     const s = new Set();
-    (AGG.rp[rgn] || []).forEach(pt => (AGG.ps[pt] || []).forEach(sl => s.add(sl)));
+    (AGG.rp[rgn]||[]).forEach(pt=>(AGG.ps[pt]||[]).forEach(sl=>s.add(sl)));
     sales = Array.from(s).sort();
   } else {
     const s = new Set();
-    Object.values(AGG.ps).forEach(a => a.forEach(sl => s.add(sl)));
-    sales = Array.from(s).sort().slice(0, 80);
+    Object.values(AGG.ps).forEach(a=>a.forEach(sl=>s.add(sl)));
+    sales = Array.from(s).sort().slice(0,100);
   }
   sSel.innerHTML = '<option value="">— ทั้งหมด —</option>' +
-    sales.map(sl => `<option>${sl}</option>`).join('');
+    sales.map(sl=>`<option>${sl}</option>`).join('');
   render();
 }
 

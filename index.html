@@ -6,6 +6,7 @@
 <title>TOL True Shop WW — KPI Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="data.js"></script>
+<script src="todo.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -242,6 +243,36 @@
     .header { padding: 10px 14px; }
     .metric-value { font-size: 20px; }
   }
+
+  /* ── To-Do List ── */
+  .todo-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .todo-summary{display:flex;gap:8px;flex-wrap:wrap;}
+  .todo-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;transition:opacity .15s;}
+  .todo-badge:hover{opacity:.8;}
+  .badge-critical{background:#fde8e8;color:#c0392b;border:1px solid #f5b7b7;}
+  .badge-high{background:#fef0e0;color:#c47b0a;border:1px solid #f9c978;}
+  .badge-medium{background:#fefce0;color:#8a7200;border:1px solid #e8d800;}
+  .badge-schedule{background:#e3f0fb;color:#1a6fb5;border:1px solid #90c4ef;}
+  .badge-all{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+  .todo-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
+  .todo-search{font-size:12px;padding:5px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);width:220px;}
+  .todo-table-wrap{overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--border);}
+  table.todo{width:100%;border-collapse:collapse;font-size:12px;}
+  table.todo thead th{background:var(--surface2);padding:8px 10px;text-align:left;font-weight:600;color:var(--text2);white-space:nowrap;border-bottom:1px solid var(--border);position:sticky;top:0;}
+  table.todo tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+  table.todo tbody tr:hover{background:var(--surface2);}
+  table.todo tbody td{padding:7px 10px;vertical-align:middle;white-space:nowrap;}
+  .pri-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;flex-shrink:0;}
+  .dot-critical{background:#c0392b;}
+  .dot-high{background:#c47b0a;}
+  .dot-medium{background:#c4b700;}
+  .dot-schedule{background:#1a6fb5;}
+  .asset-chip{font-family:monospace;font-size:11px;background:var(--surface2);padding:2px 7px;border-radius:4px;border:1px solid var(--border);white-space:nowrap;}
+  .todo-pagination{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:11px;color:var(--text2);}
+  .page-btn{font-size:11px;padding:3px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);cursor:pointer;}
+  .page-btn:disabled{opacity:.4;cursor:default;}
+  .page-btn:not(:disabled):hover{background:var(--surface2);}
+  .todo-empty{text-align:center;padding:32px;color:var(--text3);font-size:13px;}
 </style>
 </head>
 <body>
@@ -249,7 +280,7 @@
 <header class="header">
   <div class="header-left">
     <h1>TOL True Shop WW — KPI Dashboard</h1>
-    <p>Data as of <strong>23 มิถุนายน 2026</strong>
+    <p>Data as of <strong id="asOfLabel">—</strong>
       <span class="badge">FLAG_KPI = KPI</span>
       <span class="badge badge-blue">SUBS_STATUS = Connect</span>
     </p>
@@ -305,11 +336,11 @@
   <!-- Charts Row 1 -->
   <div class="grid-2">
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">1</span>TOL-REGISTER รายวัน — วันที่ Register (มิ.ย. 2026)</div>
+      <div class="chart-title"><span class="chart-num">1</span>TOL-REGISTER รายวัน — วันที่ Register (<span id="monthLabel1">—</span>)</div>
       <div class="chart-wrap h155"><canvas id="c1" role="img" aria-label="Register daily">Register daily</canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">2</span>TOL-CONNECT รายวัน (มิ.ย. 2026)</div>
+      <div class="chart-title"><span class="chart-num">2</span>TOL-CONNECT รายวัน (<span id="monthLabel2">—</span>)</div>
       <div class="chart-wrap h155"><canvas id="c2" role="img" aria-label="Connect daily">Connect daily</canvas></div>
     </div>
   </div>
@@ -341,7 +372,7 @@
   <!-- Charts Row 4 -->
   <div class="grid-2">
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">7</span>Pending แยกรายวัน (มิ.ย. 2026)</div>
+      <div class="chart-title"><span class="chart-num">7</span>Pending แยกรายวัน (<span id="monthLabel7">—</span>)</div>
       <div class="chart-wrap h155"><canvas id="c7" role="img" aria-label="Pending daily">Pending daily</canvas></div>
     </div>
     <div class="chart-card">
@@ -353,7 +384,7 @@
   <!-- Chart 9 -->
   <div class="grid-1">
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">9</span>TOL-REGISTER ที่รอติดตั้ง (Pending) ในเดือนกรกฎาคม ตาม Region WW</div>
+      <div class="chart-title"><span class="chart-num">9</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน <span id="nextMonthLabel">—</span> ตาม Region WW</div>
       <div class="chart-wrap h280"><canvas id="c9" role="img" aria-label="July pending by region">July pending by region</canvas></div>
     </div>
   </div>
@@ -366,14 +397,93 @@
 
 </main>
 
+<!-- To-Do List Section -->
+<section class="main" style="padding-top:0;">
+  <div class="chart-card" style="margin-bottom:0;">
+    <div class="todo-header">
+      <div>
+        <div class="section-title" style="margin:0 0 4px;">รายการที่ต้อง Monitor การติดตั้ง (Pending)</div>
+        <p style="font-size:11px;color:var(--text2);margin:0;">
+          ข้อมูล ณ วันที่ <span id="todoAsOf">—</span> &nbsp;|&nbsp; Pending ทั้งหมด <strong id="todoTotal">—</strong> Link
+        </p>
+      </div>
+      <div class="todo-summary" id="todoBadges">
+        <span class="todo-badge badge-critical" onclick="filterTodo('critical')">🔴 เร่งด่วนมาก ≥7 วัน <span id="bcritical">0</span></span>
+        <span class="todo-badge badge-high"     onclick="filterTodo('high')"    >🟠 เร่งด่วน 3-6 วัน <span id="bhigh">0</span></span>
+        <span class="todo-badge badge-medium"   onclick="filterTodo('medium')"  >🟡 ติดตาม 0-2 วัน <span id="bmedium">0</span></span>
+        <span class="todo-badge badge-schedule" onclick="filterTodo('schedule')" >🔵 นัดล่วงหน้า <span id="bschedule">0</span></span>
+        <span class="todo-badge badge-all"      onclick="filterTodo('all')"     >ทั้งหมด</span>
+      </div>
+    </div>
+
+    <div class="todo-toolbar">
+      <input class="todo-search" id="todoSearch" type="text"
+        placeholder="ค้นหา ASSET_NUM, Partner, Sale, Handler..."
+        oninput="searchTodo()">
+      <select style="font-size:12px;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);"
+        id="todoRegionFilter" onchange="searchTodo()">
+        <option value="">— Region ทั้งหมด —</option>
+      </select>
+      <select style="font-size:12px;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);"
+        id="todoSaleFilter" onchange="searchTodo()">
+        <option value="">— Sale ทั้งหมด —</option>
+      </select>
+      <span id="todoCount" style="font-size:11px;color:var(--text2);"></span>
+    </div>
+
+    <div class="todo-table-wrap">
+      <table class="todo" role="grid" aria-label="Pending To-Do List">
+        <thead>
+          <tr>
+            <th>ลำดับ</th>
+            <th>Priority</th>
+            <th>ASSET_NUM</th>
+            <th>วันนัด</th>
+            <th>รออยู่ (วัน)</th>
+            <th>Partner</th>
+            <th>Region WW</th>
+            <th>Sale Represent</th>
+            <th>Package</th>
+            <th>Handler</th>
+            <th>Subcontract</th>
+          </tr>
+        </thead>
+        <tbody id="todoBody">
+          <tr><td colspan="11" class="todo-empty">กำลังโหลด...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="todo-pagination">
+      <button class="page-btn" id="btnPrev" onclick="changePage(-1)" disabled>◀ ก่อนหน้า</button>
+      <span id="pageInfo" style="font-size:11px;color:var(--text2);">หน้า 1</span>
+      <button class="page-btn" id="btnNext" onclick="changePage(1)">ถัดไป ▶</button>
+    </div>
+  </div>
+</section>
+
 <footer>
-  TOL True Shop WW KPI Dashboard &nbsp;|&nbsp; Data as of 23 มิถุนายน 2026 &nbsp;|&nbsp; FLAG_KPI = KPI
+  TOL True Shop WW KPI Dashboard &nbsp;|&nbsp; Data as of <span id="asOfFooter">—</span> &nbsp;|&nbsp; FLAG_KPI = KPI
 </footer>
 
 <script>
 const L30  = Array.from({length:30}, (_,i) => String(i+1));
 const L23  = Array.from({length:23}, (_,i) => String(i+1));
 const REGL = AGG.regLabels || L23;
+const CONL = AGG.conLabels || L23;
+
+// Set dynamic labels on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const al = AGG.asOf || '';
+  document.getElementById('asOfLabel').textContent  = al;
+  document.getElementById('asOfFooter').textContent = al;
+  const ml = AGG.monthLabel || '';
+  const nl = AGG.nextLabel  || '';
+  document.getElementById('monthLabel1').textContent  = ml;
+  document.getElementById('monthLabel2').textContent  = ml;
+  document.getElementById('monthLabel7').textContent  = ml;
+  document.getElementById('nextMonthLabel').textContent = nl;
+});
 const ch   = {};
 
 function mk(id, type, labels, data, color, opts={}) {
@@ -440,7 +550,7 @@ function render() {
   document.getElementById('mCa').textContent = d.canc.toLocaleString();
 
   mk('c1','bar',  REGL.slice(0,d.c1.length), d.c1, '#1a6fb5');
-  mk('c2','line', L23.slice(0,d.c2.length),  d.c2, '#0f7c5a');
+  mk('c2','line', CONL.slice(0,d.c2.length), d.c2, '#0f7c5a');
 
   const c3l=d.c3l.filter(l=>l);
   const c3v=d.c3v.filter((_,i)=>d.c3l[i]);
@@ -452,7 +562,8 @@ function render() {
 
   mk('c5','bar',d.c5l,d.c5v,'#7c6fc4',{ia:'y'});
   mk('c6','bar',d.c6l,d.c6v,'#1d9e75',{ia:'y'});
-  mk('c7','bar',L30,d.c7,d.c7.map(v=>v>=100?'#c0392b':v>=20?'#c47b0a':'#e8a838'));
+  const pendL = Array.from({length: AGG.pendDays||30}, (_,i)=>String(i+1));
+  mk('c7','bar',pendL,d.c7,d.c7.map(v=>v>=100?'#c0392b':v>=20?'#c47b0a':'#e8a838'));
 
   if(d.c8l&&d.c8l.length)
     mk('c8','bar',d.c8l,d.c8v,d.c8v.map(v=>v>=20?'#c0392b':v>=10?'#c47b0a':'#4a90d9'),{ia:'y'});
@@ -522,6 +633,122 @@ function resetF() {
 
 initRegion();
 onRegion();
+
+
+// ═══════════════════════════════════════════
+// TO-DO LIST Logic
+// ═══════════════════════════════════════════
+let todoFiltered = [];
+let todoCurrent  = 'all';
+let todoPage     = 1;
+const TODO_PAGE_SIZE = 20;
+
+function initTodo() {
+  if (typeof TODO === 'undefined') return;
+
+  // Set header info
+  document.getElementById('todoAsOf').textContent   = TODO.asOf   || '—';
+  document.getElementById('todoTotal').textContent  = (TODO.summary.total || 0).toLocaleString();
+  document.getElementById('bcritical').textContent  = TODO.summary.critical  || 0;
+  document.getElementById('bhigh').textContent      = TODO.summary.high      || 0;
+  document.getElementById('bmedium').textContent    = TODO.summary.medium    || 0;
+  document.getElementById('bschedule').textContent  = TODO.summary.schedule  || 0;
+
+  // Populate region filter
+  const regions = [...new Set(TODO.items.map(t => t.rgn).filter(Boolean))].sort();
+  const rSel = document.getElementById('todoRegionFilter');
+  rSel.innerHTML = '<option value="">— Region ทั้งหมด —</option>' +
+    regions.map(r => `<option>${r}</option>`).join('');
+
+  // Populate sale filter (top 50)
+  const sales = [...new Set(TODO.items.map(t => t.sal).filter(Boolean))].sort();
+  const sSel = document.getElementById('todoSaleFilter');
+  sSel.innerHTML = '<option value="">— Sale ทั้งหมด —</option>' +
+    sales.slice(0,60).map(s => `<option>${s}</option>`).join('');
+
+  filterTodo('all');
+}
+
+function filterTodo(priority) {
+  todoCurrent = priority;
+  todoPage = 1;
+  // Highlight active badge
+  document.querySelectorAll('.todo-badge').forEach(b => b.style.opacity = '0.55');
+  event && event.target && (event.target.closest('.todo-badge').style.opacity = '1');
+  searchTodo();
+}
+
+function searchTodo() {
+  if (typeof TODO === 'undefined') return;
+  const q    = (document.getElementById('todoSearch').value || '').toLowerCase();
+  const rgn  = document.getElementById('todoRegionFilter').value;
+  const sal  = document.getElementById('todoSaleFilter').value;
+
+  todoFiltered = TODO.items.filter(t => {
+    if (todoCurrent !== 'all' && t.pri !== todoCurrent) return false;
+    if (rgn && t.rgn !== rgn) return false;
+    if (sal && t.sal !== sal) return false;
+    if (q) {
+      const hay = [t.asset, t.ptn, t.sal, t.handler, t.subcon, t.promo, t.rgn].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  todoPage = 1;
+  renderTodoTable();
+}
+
+const PRI_DOT   = {critical:'dot-critical',high:'dot-high',medium:'dot-medium',schedule:'dot-schedule'};
+const PRI_LABEL = {critical:'เร่งด่วนมาก',high:'เร่งด่วน',medium:'ติดตาม',schedule:'นัดล่วงหน้า'};
+
+function renderTodoTable() {
+  const body  = document.getElementById('todoBody');
+  const total = todoFiltered.length;
+  const pages = Math.max(1, Math.ceil(total / TODO_PAGE_SIZE));
+  todoPage    = Math.min(Math.max(todoPage, 1), pages);
+
+  const start = (todoPage - 1) * TODO_PAGE_SIZE;
+  const slice = todoFiltered.slice(start, start + TODO_PAGE_SIZE);
+
+  document.getElementById('todoCount').textContent =
+    `แสดง ${start+1}–${Math.min(start+TODO_PAGE_SIZE, total)} จาก ${total.toLocaleString()} รายการ`;
+  document.getElementById('pageInfo').textContent =
+    `หน้า ${todoPage} / ${pages}`;
+  document.getElementById('btnPrev').disabled = todoPage <= 1;
+  document.getElementById('btnNext').disabled = todoPage >= pages;
+
+  if (!slice.length) {
+    body.innerHTML = '<tr><td colspan="11" class="todo-empty">ไม่พบรายการ</td></tr>';
+    return;
+  }
+
+  body.innerHTML = slice.map((t, i) => {
+    const ageLabel = t.age > 0 ? `<span style="color:${t.age>=7?'#c0392b':t.age>=3?'#c47b0a':'#6b7280'};font-weight:600;">${t.age} วัน</span>`
+                   : t.age === 0 ? '<span style="color:#0f7c5a;font-weight:600;">วันนี้</span>'
+                   : `<span style="color:#1a6fb5;">อีก ${Math.abs(t.age)} วัน</span>`;
+    return `<tr>
+      <td style="color:var(--text3);text-align:center;">${start+i+1}</td>
+      <td><span class="pri-dot ${PRI_DOT[t.pri]||''}"></span>${PRI_LABEL[t.pri]||t.pri}</td>
+      <td><span class="asset-chip">${t.asset}</span></td>
+      <td>${t.appoint}</td>
+      <td style="text-align:center;">${ageLabel}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;" title="${t.ptn}">${t.ptn}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;" title="${t.rgn}">${t.rgn}</td>
+      <td>${t.sal}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;" title="${t.promo}">${t.promo}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;" title="${t.handler}">${t.handler}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${t.subcon}">${t.subcon}</td>
+    </tr>`;
+  }).join('');
+}
+
+function changePage(dir) {
+  todoPage += dir;
+  renderTodoTable();
+}
+
+// Init on load
+document.addEventListener('DOMContentLoaded', initTodo);
+
 </script>
-</body>
-</html>

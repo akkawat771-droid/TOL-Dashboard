@@ -278,6 +278,50 @@ Chart.unregister(ChartDataLabels);
   .page-btn:disabled{opacity:.4;cursor:default;}
   .page-btn:not(:disabled):hover{background:var(--surface2);}
   .todo-empty{text-align:center;padding:32px;color:var(--text3);font-size:13px;}
+
+  /* ── Focus Mode Modal ── */
+  .chart-card { position: relative; }
+  .focus-btn {
+    position: absolute; top: 10px; right: 12px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 3px 8px;
+    font-size: 10px; font-weight: 600; color: var(--text2);
+    cursor: pointer; display: flex; align-items: center; gap: 4px;
+    transition: background .15s, color .15s; z-index: 2;
+  }
+  .focus-btn:hover { background: var(--text); color: var(--surface); }
+  .focus-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.72); z-index: 9000;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .focus-overlay.active { display: flex; }
+  .focus-modal {
+    background: var(--surface); border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    width: 100%; max-width: 1100px;
+    max-height: 90vh; display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .focus-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .focus-modal-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .focus-close-btn {
+    background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 4px 12px; font-size: 12px; color: var(--text2);
+    cursor: pointer; transition: background .15s;
+  }
+  .focus-close-btn:hover { background: var(--surface2); }
+  .focus-modal-body {
+    flex: 1; padding: 20px; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 480px;
+  }
+  .focus-canvas-wrap { width: 100%; height: 100%; min-height: 460px; position: relative; }
 </style>
 </head>
 <body>
@@ -342,10 +386,12 @@ Chart.unregister(ChartDataLabels);
   <div class="grid-2">
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">1</span>TOL-REGISTER รายวัน — วันที่ Register (<span id="monthLabel1">—</span>)</div>
+    <button class="focus-btn" onclick="openFocus('c<div class="chart-title"><span class="chart-num">1</span>TOL-REGISTER รายวัน — วันที่ Register (<span id="monthLabel1">—</span>)</div>','1')" title="Focus Mode">⛶ Focus</button>
       <div class="chart-wrap h155"><canvas id="c1" role="img" aria-label="Register daily">Register daily</canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">2</span>TOL-CONNECT รายวัน (<span id="monthLabel2">—</span>)</div>
+    <button class="focus-btn" onclick="openFocus('c<div class="chart-title"><span class="chart-num">2</span>TOL-CONNECT รายวัน (<span id="monthLabel2">—</span>)</div>','2')" title="Focus Mode">⛶ Focus</button>
       <div class="chart-wrap h155"><canvas id="c2" role="img" aria-label="Connect daily">Connect daily</canvas></div>
     </div>
   </div>
@@ -354,10 +400,12 @@ Chart.unregister(ChartDataLabels);
   <div class="grid-2">
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">3</span>Cancel Rate % ตาม Region WW</div>
+    <button class="focus-btn" onclick="openFocus('c<div class="chart-title"><span class="chart-num">3</span>Cancel Rate % ตาม Region WW</div>','3')" title="Focus Mode">⛶ Focus</button>
       <div class="chart-wrap h310"><canvas id="c3" role="img" aria-label="Cancel rate by region">Cancel rate</canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">4</span>Pending Rate % ตาม Region WW</div>
+    <button class="focus-btn" onclick="openFocus('c<div class="chart-title"><span class="chart-num">4</span>Pending Rate % ตาม Region WW</div>','4')" title="Focus Mode">⛶ Focus</button>
       <div class="chart-wrap h310"><canvas id="c4" role="img" aria-label="Pending rate by region">Pending rate</canvas></div>
     </div>
   </div>
@@ -366,10 +414,12 @@ Chart.unregister(ChartDataLabels);
   <div class="grid-2">
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">5</span>แพ็กเกจยอดนิยม Top 5 (KPI + Connect)</div>
+    <button class="focus-btn" onclick="openFocus('c<div class="chart-title"><span class="chart-num">5</span>แพ็กเกจยอดนิยม Top 5 (KPI + Connect)</div>','5')" title="Focus Mode">⛶ Focus</button>
       <div class="chart-wrap h220"><canvas id="c5" role="img" aria-label="Top 5 packages">Top packages</canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">6</span>Top 5 Partner — TOL-CONNECT</div>
+    <button class="focus-btn" onclick="openFocus('c<div class="chart-title"><span class="chart-num">6</span>Top 5 Partner — TOL-CONNECT</div>','6')" title="Focus Mode">⛶ Focus</button>
       <div class="chart-wrap h220"><canvas id="c6" role="img" aria-label="Top 5 partner connect">Top partner connect</canvas></div>
     </div>
   </div>
@@ -378,10 +428,12 @@ Chart.unregister(ChartDataLabels);
   <div class="grid-2">
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">7</span>Pending แยกรายวัน (<span id="monthLabel7">—</span>)</div>
+    <button class="focus-btn" onclick="openFocus('c<div class="chart-title"><span class="chart-num">7</span>Pending แยกรายวัน (<span id="monthLabel7">—</span>)</div>','7')" title="Focus Mode">⛶ Focus</button>
       <div class="chart-wrap h155"><canvas id="c7" role="img" aria-label="Pending daily">Pending daily</canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">8</span>Top 10 Partner — Cancel (KPI)</div>
+    <button class="focus-btn" onclick="openFocus('c<div class="chart-title"><span class="chart-num">8</span>Top 10 Partner — Cancel (KPI)</div>','8')" title="Focus Mode">⛶ Focus</button>
       <div class="chart-wrap h155"><canvas id="c8" role="img" aria-label="Top 10 cancel partner">Top cancel partner</canvas></div>
     </div>
   </div>
@@ -390,6 +442,7 @@ Chart.unregister(ChartDataLabels);
   <div class="grid-1">
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">9</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน <span id="nextMonthLabel">—</span> ตาม Region WW</div>
+    <button class="focus-btn" onclick="openFocus('c<div class="chart-title"><span class="chart-num">9</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน <span id="nextMonthLabel">—</span> ตาม Region WW</div>','9')" title="Focus Mode">⛶ Focus</button>
       <div class="chart-wrap h280"><canvas id="c9" role="img" aria-label="July pending by region">July pending by region</canvas></div>
     </div>
   </div>
@@ -794,5 +847,144 @@ function changePage(dir) {
 
 // Init on load
 document.addEventListener('DOMContentLoaded', initTodo);
+
+
+
+// ═══════════════════════════════════════════
+// FOCUS MODE
+// ═══════════════════════════════════════════
+let focusChart = null;
+
+function openFocus(srcId, title) {
+  const srcChart = ch[srcId];
+  if (!srcChart) return;
+
+  document.getElementById('focusTitle').textContent = title;
+  document.getElementById('focusOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  // Destroy previous focus chart
+  if (focusChart) { focusChart.destroy(); focusChart = null; }
+
+  // Clone config from source chart
+  const srcCfg  = srcChart.config;
+  const srcData  = srcChart.data;
+  const srcOpts  = srcChart.options;
+
+  const canvas = document.getElementById('focusCanvas');
+  const clonedData = JSON.parse(JSON.stringify(srcData));
+
+  // Determine if horizontal
+  const isH = (srcCfg.options && srcCfg.options.indexAxis === 'y');
+
+  // Rebuild datalabels with larger font for focus mode
+  const focusDL = {
+    display: true,
+    color: '#333',
+    font: { size: 11, weight: '600' },
+    formatter: (val) => {
+      if (val === 0 || val === null || val === undefined) return '';
+      // Detect if source chart uses pct (check formatter from opts)
+      const raw = Number(val);
+      if (!isNaN(raw) && raw > 0 && raw < 100 &&
+          srcId === 'c3' || srcId === 'c4') return raw.toFixed(1) + '%';
+      return raw.toLocaleString();
+    },
+    anchor: isH ? 'end' : 'end',
+    align:  isH ? 'right' : 'top',
+    clamp:  true,
+    padding: { left: 2, right: 2 },
+  };
+
+  // Get pct flag from id
+  const isPct = (srcId === 'c3' || srcId === 'c4');
+
+  // Update datalabels in cloned datasets
+  clonedData.datasets.forEach(ds => {
+    ds.datalabels = {
+      display: true,
+      color: '#333',
+      font: { size: 11, weight: '600' },
+      formatter: (val) => {
+        if (val === 0 || val === null || val === undefined) return '';
+        if (isPct) return Number(val).toFixed(1) + '%';
+        return Number(val).toLocaleString();
+      },
+      anchor: isH ? 'end' : 'end',
+      align:  isH ? 'right' : 'top',
+      clamp:  true,
+    };
+  });
+
+  focusChart = new Chart(canvas, {
+    type: srcCfg.type,
+    data: clonedData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: isH ? 4 : 20, right: isH ? 60 : 8 } },
+      animation: { duration: 300 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: c => isPct
+              ? (typeof c.raw === 'number' ? c.raw.toFixed(1) : '0') + '%'
+              : Number(c.raw).toLocaleString()
+          }
+        },
+        datalabels: focusDL
+      },
+      indexAxis: isH ? 'y' : 'x',
+      scales: {
+        x: {
+          ticks: { font: { size: 11 }, color: '#555', maxRotation: 0,
+            callback: isH && isPct ? v => v + '%'
+              : isH ? function(val, idx) {
+                  const lbl = clonedData.labels[idx];
+                  return lbl !== undefined ? lbl : val;
+                }
+              : function(val, idx) {
+                  const lbl = clonedData.labels[idx];
+                  return lbl !== undefined ? lbl : val;
+                }
+          },
+          grid: { display: isH, color: 'rgba(0,0,0,0.06)' },
+          ...(isH ? {} : { beginAtZero: true })
+        },
+        y: {
+          ticks: { font: { size: 11 }, color: '#555',
+            callback: isH
+              ? function(val, idx) {
+                  const lbl = clonedData.labels[idx];
+                  return lbl !== undefined ? lbl : val;
+                }
+              : isPct ? v => v + '%'
+              : v => Number(v).toLocaleString()
+          },
+          grid: { display: !isH, color: 'rgba(0,0,0,0.06)' },
+          ...(isH ? {} : { beginAtZero: true })
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+function closeFocusBtn() {
+  document.getElementById('focusOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  if (focusChart) { focusChart.destroy(); focusChart = null; }
+}
+
+function closeFocus(e) {
+  // Close only if clicking overlay background (not modal itself)
+  if (e.target.id === 'focusOverlay') closeFocusBtn();
+}
+
+// Close with Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeFocusBtn();
+});
 
 </script>

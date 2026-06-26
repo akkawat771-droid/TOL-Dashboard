@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TOL True Shop WW — KPI Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script>
+// Unregister global datalabels so we control per-chart
+Chart.unregister(ChartDataLabels);
+</script>
 <script src="data.js"></script>
 <script src="todo.js"></script>
 <style>
@@ -282,7 +287,7 @@
     <h1>TOL True Shop WW — KPI Dashboard</h1>
     <p>Data as of <strong id="asOfLabel">—</strong>
       <span class="badge">FLAG_KPI = KPI</span>
-      <span class="badge badge-blue">SUBS_STATUS = Connect</span>
+      <span class="badge badge-blue">SUBS_STATUS ≠ Blank</span>
     </p>
   </div>
 </header>
@@ -491,6 +496,25 @@ function mk(id, type, labels, data, color, opts={}) {
   if (!ctx) return;
   if (ch[id]) ch[id].destroy();
   const isH = opts.ia === 'y';
+
+  // Data labels plugin (show value on each bar/point)
+  const datalabels = {
+    display: true,
+    color: '#444',
+    font: { size: 9, weight: '600' },
+    formatter: (val) => {
+      if (val === 0 || val === null || val === undefined) return '';
+      if (opts.pct) return (typeof val==='number' ? val.toFixed(1) : val) + '%';
+      return Number(val).toLocaleString();
+    },
+    // For horizontal bars: anchor end, align right
+    // For vertical bars/line: anchor end, align top
+    anchor: isH ? 'end' : 'end',
+    align:  isH ? 'right' : 'top',
+    clamp:  true,
+    padding: { left: 2, right: 2 },
+  };
+
   ch[id] = new Chart(ctx, {
     type,
     data: { labels, datasets: [{ label:'', data,
@@ -498,24 +522,44 @@ function mk(id, type, labels, data, color, opts={}) {
       borderWidth: type==='line' ? 2 : 0,
       borderRadius: type==='bar'  ? 3 : 0,
       fill: type==='line' ? 'origin' : false,
-      tension: 0.3, pointRadius: type==='line' ? 2 : 0
+      tension: 0.3, pointRadius: type==='line' ? 3 : 0,
+      datalabels
     }]},
     options: {
       responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false},
+      layout: { padding: { top: isH ? 2 : 16, right: isH ? 36 : 4 } },
+      plugins:{
+        legend:{display:false},
         tooltip:{callbacks:{label: c => opts.pct
           ? (typeof c.raw==='number' ? c.raw.toFixed(1):'0')+'%'
-          : Number(c.raw).toLocaleString()}}},
+          : Number(c.raw).toLocaleString()}},
+        datalabels
+      },
       indexAxis: opts.ia||'x',
       scales:{
-        x:{ ticks:{font:{size:10},color:'#888',maxRotation:0,
-              callback: isH && opts.pct ? v=>v+'%' : function(val,idx){return labels[idx]!==undefined?labels[idx]:val;}},
-            grid:{display:isH,color:'rgba(0,0,0,0.05)'}},
-        y:{ ticks:{font:{size:10},color:'#888',
-              callback: !isH && opts.pct ? v=>v+'%' : function(val,idx){return labels[idx]!==undefined?labels[idx]:val;}},
-            grid:{display:!isH,color:'rgba(0,0,0,0.05)'}}
+        x:{
+          ticks:{font:{size:10},color:'#888',maxRotation:0,
+            callback: isH && opts.pct ? v=>v+'%'
+              : isH ? function(val,idx){ return val; }
+              : function(val,idx){return labels[idx]!==undefined?labels[idx]:val;}},
+          grid:{display:isH,color:'rgba(0,0,0,0.05)'},
+          // For vertical charts: let y-axis show real numeric values
+          ...(isH ? {} : {})
+        },
+        y:{
+          ticks:{font:{size:10},color:'#888',
+            // Vertical charts: show real numeric ticks on Y axis
+            callback: isH
+              ? function(val,idx){return labels[idx]!==undefined?labels[idx]:val;}
+              : opts.pct ? v=>v+'%' : v => Number(v).toLocaleString()
+          },
+          grid:{display:!isH,color:'rgba(0,0,0,0.05)'},
+          // Vertical charts: start at 0, nice ticks
+          ...(isH ? {} : { beginAtZero:true })
+        }
       }
-    }
+    },
+    plugins: [ChartDataLabels]
   });
 }
 

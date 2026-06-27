@@ -421,6 +421,14 @@ Chart.unregister(ChartDataLabels);
         <option value="">— Region ทั้งหมด —</option>
       </select>
       <select style="font-size:12px;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);"
+        id="todoPartnerFilter" onchange="searchTodo()">
+        <option value="">— Partner ทั้งหมด —</option>
+      </select>
+      <select style="font-size:12px;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);"
+        id="todoAppointFilter" onchange="searchTodo()">
+        <option value="">— วันนัด (APPOINT_DAY) ทั้งหมด —</option>
+      </select>
+      <select style="font-size:12px;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);"
         id="todoSaleFilter" onchange="searchTodo()">
         <option value="">— Sale ทั้งหมด —</option>
       </select>
@@ -682,6 +690,21 @@ function initTodo() {
   sSel.innerHTML = '<option value="">— Sale ทั้งหมด —</option>' +
     sales.slice(0,60).map(s=>`<option>${s}</option>`).join('');
 
+  // Partner filter
+  const partners = [...new Set(TODO.items.map(t=>t.ptn).filter(Boolean))].sort();
+  const ptnSel = document.getElementById('todoPartnerFilter');
+  ptnSel.innerHTML = '<option value="">— Partner ทั้งหมด —</option>' +
+    partners.map(p=>`<option>${p}</option>`).join('');
+
+  // APPOINT_DAY filter — unique dates sorted descending (most recent first)
+  const appoints = [...new Set(TODO.items.map(t=>t.appoint).filter(Boolean))].sort((a,b)=>{
+    const [da,ma,ya] = a.split('/'); const [db,mb,yb] = b.split('/');
+    return new Date(yb,mb-1,db) - new Date(ya,ma-1,da);
+  });
+  const apptSel = document.getElementById('todoAppointFilter');
+  apptSel.innerHTML = '<option value="">— วันนัด (APPOINT_DAY) ทั้งหมด —</option>' +
+    appoints.map(d=>`<option>${d}</option>`).join('');
+
   filterTodo('all');
 }
 
@@ -695,15 +718,19 @@ function filterTodo(priority) {
 
 function searchTodo() {
   if (typeof TODO === 'undefined') return;
-  const q   = (document.getElementById('todoSearch').value||'').toLowerCase();
-  const rgn = document.getElementById('todoRegionFilter').value;
-  const sal = document.getElementById('todoSaleFilter').value;
+  const q    = (document.getElementById('todoSearch').value||'').toLowerCase();
+  const rgn  = document.getElementById('todoRegionFilter').value;
+  const ptn  = document.getElementById('todoPartnerFilter').value;
+  const appt = document.getElementById('todoAppointFilter').value;
+  const sal  = document.getElementById('todoSaleFilter').value;
   todoFiltered = TODO.items.filter(t => {
     if (todoCurrent !== 'all' && t.pri !== todoCurrent) return false;
-    if (rgn && t.rgn !== rgn) return false;
-    if (sal && t.sal !== sal) return false;
+    if (rgn  && t.rgn    !== rgn)  return false;
+    if (ptn  && t.ptn    !== ptn)  return false;
+    if (appt && t.appoint !== appt) return false;
+    if (sal  && t.sal    !== sal)  return false;
     if (q) {
-      const hay = [t.asset,t.ptn,t.sal,t.handler,t.subcon,t.promo,t.rgn].join(' ').toLowerCase();
+      const hay = [t.asset,t.ptn,t.sal,t.handler,t.subcon,t.promo,t.rgn,t.appoint].join(' ').toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;

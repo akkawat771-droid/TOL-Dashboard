@@ -378,10 +378,15 @@ Chart.unregister(ChartDataLabels);
     </div>
   </div>
 
-  <!-- Chart 9 -->
-  <div class="grid-1">
+  <!-- Chart 9 & 10 -->
+  <div class="grid-2" style="margin-bottom:.875rem;">
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">9</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน <span id="nextMonthLabel">—</span> ตาม Region WW</div>      <div class="chart-wrap h280"><canvas id="c9" role="img" aria-label="July pending by region">July pending by region</canvas></div>
+      <div class="chart-title"><span class="chart-num">9</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน <span id="nextMonthLabel">—</span> ตาม Region WW</div>
+      <div class="chart-wrap h280"><canvas id="c9" role="img" aria-label="July pending by region">July pending by region</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">10</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน ก.ค. ตาม Partner Name (Top 15)</div>
+      <div class="chart-wrap h280"><canvas id="c10" role="img" aria-label="July pending by partner">July pending by partner</canvas></div>
     </div>
   </div>
 
@@ -604,6 +609,8 @@ function render() {
     mk('c8','bar',d.c8l,d.c8v,d.c8v.map(v=>v>=20?'#c0392b':v>=10?'#c47b0a':'#4a90d9'),{ia:'y'});
   if(d.c9l&&d.c9l.length)
     mk('c9','bar',d.c9l,d.c9v,d.c9v.map(v=>v>=10?'#c0392b':v>=5?'#c47b0a':'#4a90d9'),{ia:'y'});
+  if(d.c10l&&d.c10l.length)
+    mk('c10','bar',d.c10l,d.c10v,d.c10v.map(v=>v>=10?'#c0392b':v>=5?'#c47b0a':'#4a90d9'),{ia:'y'});
 
   renderInsights(d.ins||[]);
 }

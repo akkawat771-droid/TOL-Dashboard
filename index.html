@@ -390,11 +390,15 @@ Chart.unregister(ChartDataLabels);
     </div>
   </div>
 
-  <!-- Chart 11 -->
-  <div class="grid-1" style="margin-bottom:.875rem;">
+  <!-- Chart 11 & 12 -->
+  <div class="grid-2" style="margin-bottom:.875rem;">
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">11</span>จำนวน Cancel รายวัน — อ้างอิงวันที่ Register (<span id="monthLabel11">—</span>)</div>
-      <div class="chart-wrap h155"><canvas id="c11" role="img" aria-label="Cancel daily by register day">Cancel daily by register day</canvas></div>
+      <div class="chart-wrap h200"><canvas id="c11" role="img" aria-label="Cancel daily by register day">Cancel daily by register day</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">12</span>Cancel vs Register รายวัน + %Cancel (<span id="monthLabel12">—</span>)</div>
+      <div class="chart-wrap h200"><canvas id="c12" role="img" aria-label="Cancel vs Register dual axis">Cancel vs Register dual axis</canvas></div>
     </div>
   </div>
 
@@ -503,6 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('monthLabel7').textContent  = ml;
   document.getElementById('nextMonthLabel').textContent = nl;
   document.getElementById('monthLabel11').textContent = ml;
+  document.getElementById('monthLabel12').textContent = ml;
 });
 
 function mk(id, type, labels, data, color, opts={}) {
@@ -574,6 +579,109 @@ function mk(id, type, labels, data, color, opts={}) {
   });
 }
 
+function mk12(id, labels, regData, cancData, pctData) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (ch[id]) ch[id].destroy();
+
+  ch[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Register',
+          data: regData,
+          backgroundColor: 'rgba(26,111,181,0.6)',
+          borderColor: '#1a6fb5',
+          borderWidth: 0,
+          borderRadius: 3,
+          yAxisID: 'yLeft',
+          order: 2,
+          datalabels: { display: false }
+        },
+        {
+          label: 'Cancel',
+          data: cancData,
+          backgroundColor: 'rgba(192,57,43,0.8)',
+          borderColor: '#c0392b',
+          borderWidth: 0,
+          borderRadius: 3,
+          yAxisID: 'yLeft',
+          order: 1,
+          datalabels: { display: false }
+        },
+        {
+          label: '%Cancel',
+          data: pctData,
+          type: 'line',
+          borderColor: '#e8a838',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#e8a838',
+          tension: 0.3,
+          yAxisID: 'yRight',
+          order: 0,
+          datalabels: {
+            display: true,
+            color: '#b37a00',
+            font: { size: 8, weight: '700' },
+            formatter: v => v > 0 ? v.toFixed(1)+'%' : '',
+            anchor: 'end',
+            align: 'top',
+            clamp: true,
+          }
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 20 } },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { font: { size: 10 }, boxWidth: 12, padding: 8 }
+        },
+        tooltip: {
+          callbacks: {
+            label: c => c.dataset.label === '%Cancel'
+              ? c.dataset.label + ': ' + c.raw.toFixed(1) + '%'
+              : c.dataset.label + ': ' + Number(c.raw).toLocaleString()
+          }
+        },
+        datalabels: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { font: { size: 10 }, color: '#888', maxRotation: 0,
+            callback: (v, i) => labels[i] !== undefined ? labels[i] : v },
+          grid: { display: false }
+        },
+        yLeft: {
+          type: 'linear', position: 'left',
+          ticks: { font: { size: 10 }, color: '#888',
+            callback: v => Number(v).toLocaleString() },
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          beginAtZero: true,
+          title: { display: true, text: 'จำนวนราย', font: { size: 10 }, color: '#888' }
+        },
+        yRight: {
+          type: 'linear', position: 'right',
+          ticks: { font: { size: 10 }, color: '#e8a838',
+            callback: v => v + '%' },
+          grid: { drawOnChartArea: false },
+          beginAtZero: true,
+          title: { display: true, text: '%Cancel', font: { size: 10 }, color: '#e8a838' }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
 function getDataset() {
   const rgn = document.getElementById('fR').value;
   const ptn = document.getElementById('fP').value;
@@ -623,6 +731,8 @@ function render() {
     mk('c10','bar',d.c10l,d.c10v,d.c10v.map(v=>v>=10?'#c0392b':v>=5?'#c47b0a':'#4a90d9'),{ia:'y'});
   if(d.c11&&d.c11.length)
     mk('c11','bar',CANCL.slice(0,d.c11.length),d.c11,d.c11.map(v=>v>=40?'#c0392b':v>=20?'#c47b0a':'#E24B4A'));
+  if(d.c12_reg&&d.c12_reg.length)
+    mk12('c12', CANCL.slice(0,d.c12_reg.length), d.c12_reg, d.c12_canc, d.c12_pct);
 
   renderInsights(d.ins||[]);
 }

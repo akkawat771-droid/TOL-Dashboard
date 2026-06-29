@@ -12,6 +12,7 @@ Chart.unregister(ChartDataLabels);
 </script>
 <script src="data.js"></script>
 <script src="todo.js"></script>
+<script src="sale_data.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -694,9 +695,18 @@ function getDataset() {
   } else {
     d = Object.assign({}, AGG.global);
   }
-  if (sal && AGG.sale[sal]) {
-    const s = AGG.sale[sal];
-    d = Object.assign({}, d, {reg:s.reg, con:s.con, pend:s.pend, canc:s.canc});
+  // When Sale is selected: override ALL affected series from SALE_AGG
+  if (sal && typeof SALE_AGG !== 'undefined' && SALE_AGG[sal]) {
+    const s = SALE_AGG[sal];
+    d = Object.assign({}, d, {
+      reg:  s.reg,  con:  s.con,
+      pend: s.pend, canc: s.canc,
+      c1:   s.c1,   c2:   s.c2,
+      c11:  s.c11,
+      c12_reg:  s.c12_reg,
+      c12_canc: s.c12_canc,
+      c12_pct:  s.c12_pct,
+    });
   }
   return d;
 }

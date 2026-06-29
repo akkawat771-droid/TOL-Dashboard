@@ -390,6 +390,14 @@ Chart.unregister(ChartDataLabels);
     </div>
   </div>
 
+  <!-- Chart 11 -->
+  <div class="grid-1" style="margin-bottom:.875rem;">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">11</span>จำนวน Cancel รายวัน — อ้างอิงวันที่ Register (<span id="monthLabel11">—</span>)</div>
+      <div class="chart-wrap h155"><canvas id="c11" role="img" aria-label="Cancel daily by register day">Cancel daily by register day</canvas></div>
+    </div>
+  </div>
+
   <!-- Insights -->
   <div class="section-title">สรุปวิเคราะห์และข้อแนะนำ</div>
   <div class="insights" id="insightBox">
@@ -478,8 +486,9 @@ Chart.unregister(ChartDataLabels);
 <script>
 const L30  = Array.from({length:30}, (_,i) => String(i+1));
 const L23  = Array.from({length:23}, (_,i) => String(i+1));
-const REGL = AGG.regLabels || L23;
-const CONL = AGG.conLabels || L23;
+const REGL  = AGG.regLabels    || L23;
+const CONL  = AGG.conLabels    || L23;
+const CANCL = AGG.cancelLabels || L23;
 const ch   = {};
 
 // Set dynamic labels on page load
@@ -493,6 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('monthLabel2').textContent  = ml;
   document.getElementById('monthLabel7').textContent  = ml;
   document.getElementById('nextMonthLabel').textContent = nl;
+  document.getElementById('monthLabel11').textContent = ml;
 });
 
 function mk(id, type, labels, data, color, opts={}) {
@@ -611,6 +621,8 @@ function render() {
     mk('c9','bar',d.c9l,d.c9v,d.c9v.map(v=>v>=10?'#c0392b':v>=5?'#c47b0a':'#4a90d9'),{ia:'y'});
   if(d.c10l&&d.c10l.length)
     mk('c10','bar',d.c10l,d.c10v,d.c10v.map(v=>v>=10?'#c0392b':v>=5?'#c47b0a':'#4a90d9'),{ia:'y'});
+  if(d.c11&&d.c11.length)
+    mk('c11','bar',CANCL.slice(0,d.c11.length),d.c11,d.c11.map(v=>v>=40?'#c0392b':v>=20?'#c47b0a':'#E24B4A'));
 
   renderInsights(d.ins||[]);
 }

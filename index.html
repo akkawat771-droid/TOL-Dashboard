@@ -13,6 +13,7 @@ Chart.unregister(ChartDataLabels);
 <script src="data.js"></script>
 <script src="todo.js"></script>
 <script src="sale_data.js"></script>
+<script src="pivot_data.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -279,6 +280,38 @@ Chart.unregister(ChartDataLabels);
   .page-btn:disabled{opacity:.4;cursor:default;}
   .page-btn:not(:disabled):hover{background:var(--surface2);}
   .todo-empty{text-align:center;padding:32px;color:var(--text3);font-size:13px;}
+
+  /* ── Pivot Tables ── */
+  .pivot-wrap { overflow: auto; max-height: 480px; border-radius: var(--radius-md); border: 1px solid var(--border); position: relative; }
+  table.pivot { border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+  table.pivot thead th {
+    background: var(--surface2); padding: 6px 8px; text-align: center; font-weight: 600;
+    color: var(--text2); border-bottom: 1px solid var(--border); border-right: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 2;
+  }
+  table.pivot thead th:first-child {
+    position: sticky; left: 0; top: 0; z-index: 3; background: var(--surface2);
+    text-align: left;
+  }
+  table.pivot tbody th {
+    position: sticky; left: 0; z-index: 1; background: var(--surface);
+    padding: 5px 10px; text-align: left; font-weight: 600; color: var(--text);
+    border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
+  table.pivot tbody td {
+    padding: 5px 8px; text-align: center; border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border); color: var(--text2);
+  }
+  table.pivot tbody td.zero { color: var(--text3); opacity: .35; }
+  table.pivot tbody td.hi { background: rgba(26,111,181,0.08); color: var(--text); font-weight: 600; }
+  table.pivot tfoot th, table.pivot tfoot td {
+    background: var(--surface2); font-weight: 700; padding: 6px 8px; text-align: center;
+    border-top: 2px solid var(--border); position: sticky; bottom: 0;
+  }
+  table.pivot tfoot th { position: sticky; left: 0; bottom: 0; z-index: 2; text-align: left; }
+  .pivot-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .pivot-search { font-size: 12px; padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); color: var(--text); width: 220px; }
+  .pivot-info { font-size: 11px; color: var(--text2); margin-left: auto; }
 </style>
 </head>
 <body>
@@ -485,6 +518,33 @@ Chart.unregister(ChartDataLabels);
       <button class="page-btn" id="btnPrev" onclick="changePage(-1)" disabled>◀ ก่อนหน้า</button>
       <span id="pageInfo" style="font-size:11px;color:var(--text2);">หน้า 1</span>
       <button class="page-btn" id="btnNext" onclick="changePage(1)">ถัดไป ▶</button>
+    </div>
+  </div>
+</section>
+
+<!-- Pivot Tables Section -->
+<section class="main" style="padding-top:0;">
+  <div class="chart-card" style="margin-bottom:.875rem;">
+    <div class="section-title" style="margin:0 0 4px;">13. จำนวน TOL-REGISTER ตามวันที่ Register × Partner Name</div>
+    <p style="font-size:11px;color:var(--text2);margin:0 0 10px;">แถว = วันที่ Register &nbsp;|&nbsp; คอลัมน์ = Partner Name &nbsp;|&nbsp; เรียง Partner จากยอดรวมมาก → น้อย</p>
+    <div class="pivot-toolbar">
+      <input class="pivot-search" id="t13Search" type="text" placeholder="ค้นหา Partner Name..." oninput="renderPivot('t13')">
+      <span class="pivot-info" id="t13Info"></span>
+    </div>
+    <div class="pivot-wrap" id="t13Wrap">
+      <table class="pivot" id="t13Table"></table>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:.875rem;">
+    <div class="section-title" style="margin:0 0 4px;">14. จำนวน TOL-CONNECT ตามวันที่ Connect × Partner Name</div>
+    <p style="font-size:11px;color:var(--text2);margin:0 0 10px;">แถว = วันที่ Connect (APPOINT_DAY) &nbsp;|&nbsp; คอลัมน์ = Partner Name &nbsp;|&nbsp; เรียง Partner จากยอดรวมมาก → น้อย</p>
+    <div class="pivot-toolbar">
+      <input class="pivot-search" id="t14Search" type="text" placeholder="ค้นหา Partner Name..." oninput="renderPivot('t14')">
+      <span class="pivot-info" id="t14Info"></span>
+    </div>
+    <div class="pivot-wrap" id="t14Wrap">
+      <table class="pivot" id="t14Table"></table>
     </div>
   </div>
 </section>
@@ -930,8 +990,80 @@ function renderTodoTable() {
 
 function changePage(dir) { todoPage += dir; renderTodoTable(); }
 
+
+
+// ═══════════════════════════════════════════
+// PIVOT TABLES (13 & 14)
+// ═══════════════════════════════════════════
+function renderPivot(tableId) {
+  if (typeof PIVOT === 'undefined') return;
+  const data = PIVOT[tableId];
+  if (!data) return;
+
+  const searchEl = document.getElementById(tableId + 'Search');
+  const q = (searchEl.value || '').toLowerCase();
+
+  // Filter partner columns by search
+  let colIdx = data.partners.map((p, i) => i);
+  if (q) {
+    colIdx = colIdx.filter(i => data.partners[i].toLowerCase().includes(q));
+  }
+  // Limit displayed columns for performance (max 40 at a time)
+  const MAX_COLS = 40;
+  const truncated = colIdx.length > MAX_COLS;
+  const showIdx = colIdx.slice(0, MAX_COLS);
+
+  const table = document.getElementById(tableId + 'Table');
+  const infoEl = document.getElementById(tableId + 'Info');
+
+  // Build header
+  let thead = '<thead><tr><th>วันที่</th>';
+  showIdx.forEach(i => {
+    thead += `<th title="${data.partners[i]}">${data.partners[i].length > 14 ? data.partners[i].slice(0,13)+'…' : data.partners[i]}</th>`;
+  });
+  thead += '<th>รวม</th></tr></thead>';
+
+  // Build body
+  let tbody = '<tbody>';
+  data.days.forEach((day, rIdx) => {
+    let rowSum = 0;
+    showIdx.forEach(i => rowSum += data.matrix[rIdx][i]);
+    tbody += `<tr><th>${day}</th>`;
+    showIdx.forEach(i => {
+      const val = data.matrix[rIdx][i];
+      const cls = val === 0 ? 'zero' : (val >= 10 ? 'hi' : '');
+      tbody += `<td class="${cls}">${val || '-'}</td>`;
+    });
+    tbody += `<td style="font-weight:600;">${rowSum.toLocaleString()}</td></tr>`;
+  });
+  tbody += '</tbody>';
+
+  // Build footer (column totals)
+  let colGrandTotal = 0;
+  let tfoot = '<tfoot><tr><th>รวม</th>';
+  showIdx.forEach(i => {
+    const total = data.colTotals[i];
+    colGrandTotal += total;
+    tfoot += `<td>${total.toLocaleString()}</td>`;
+  });
+  tfoot += `<td>${colGrandTotal.toLocaleString()}</td></tr></tfoot>`;
+
+  table.innerHTML = thead + tbody + tfoot;
+
+  infoEl.textContent = truncated
+    ? `แสดง ${showIdx.length} จาก ${colIdx.length} Partner ที่ตรงกับเงื่อนไข (พิมพ์ค้นหาเพื่อกรองเพิ่ม)`
+    : `แสดงทั้งหมด ${showIdx.length} Partner`;
+}
+
+function initPivots() {
+  if (typeof PIVOT === 'undefined') return;
+  renderPivot('t13');
+  renderPivot('t14');
+}
+
 // ── Init ──
 document.addEventListener('DOMContentLoaded', initTodo);
+document.addEventListener('DOMContentLoaded', initPivots);
 initRegion();
 onRegion();
 </script>

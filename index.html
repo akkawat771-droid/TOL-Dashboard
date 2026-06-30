@@ -526,7 +526,7 @@ Chart.unregister(ChartDataLabels);
 <section class="main" style="padding-top:0;">
   <div class="chart-card" style="margin-bottom:.875rem;">
     <div class="section-title" style="margin:0 0 4px;">13. จำนวน TOL-REGISTER ตามวันที่ Register × Partner Name</div>
-    <p style="font-size:11px;color:var(--text2);margin:0 0 10px;">แถว = วันที่ Register &nbsp;|&nbsp; คอลัมน์ = Partner Name &nbsp;|&nbsp; เรียง Partner จากยอดรวมมาก → น้อย</p>
+    <p style="font-size:11px;color:var(--text2);margin:0 0 10px;">แถว = Partner Name &nbsp;|&nbsp; คอลัมน์ = วันที่ Register &nbsp;|&nbsp; เรียง Partner จากยอดรวมมาก → น้อย</p>
     <div class="pivot-toolbar">
       <input class="pivot-search" id="t13Search" type="text" placeholder="ค้นหา Partner Name..." oninput="renderPivot('t13')">
       <span class="pivot-info" id="t13Info"></span>
@@ -538,7 +538,7 @@ Chart.unregister(ChartDataLabels);
 
   <div class="chart-card" style="margin-bottom:.875rem;">
     <div class="section-title" style="margin:0 0 4px;">14. จำนวน TOL-CONNECT ตามวันที่ Connect × Partner Name</div>
-    <p style="font-size:11px;color:var(--text2);margin:0 0 10px;">แถว = วันที่ Connect (APPOINT_DAY) &nbsp;|&nbsp; คอลัมน์ = Partner Name &nbsp;|&nbsp; เรียง Partner จากยอดรวมมาก → น้อย</p>
+    <p style="font-size:11px;color:var(--text2);margin:0 0 10px;">แถว = Partner Name &nbsp;|&nbsp; คอลัมน์ = วันที่ Connect (APPOINT_DAY) &nbsp;|&nbsp; เรียง Partner จากยอดรวมมาก → น้อย</p>
     <div class="pivot-toolbar">
       <input class="pivot-search" id="t14Search" type="text" placeholder="ค้นหา Partner Name..." oninput="renderPivot('t14')">
       <span class="pivot-info" id="t14Info"></span>
@@ -1003,55 +1003,57 @@ function renderPivot(tableId) {
   const searchEl = document.getElementById(tableId + 'Search');
   const q = (searchEl.value || '').toLowerCase();
 
-  // Filter partner columns by search
-  let colIdx = data.partners.map((p, i) => i);
+  // Filter PARTNER ROWS by search
+  let rowIdx = data.partners.map((p, i) => i);
   if (q) {
-    colIdx = colIdx.filter(i => data.partners[i].toLowerCase().includes(q));
+    rowIdx = rowIdx.filter(i => data.partners[i].toLowerCase().includes(q));
   }
-  // Limit displayed columns for performance (max 40 at a time)
-  const MAX_COLS = 40;
-  const truncated = colIdx.length > MAX_COLS;
-  const showIdx = colIdx.slice(0, MAX_COLS);
+  // Limit displayed rows for performance (max 40 at a time)
+  const MAX_ROWS = 40;
+  const truncated = rowIdx.length > MAX_ROWS;
+  const showIdx = rowIdx.slice(0, MAX_ROWS);
 
   const table = document.getElementById(tableId + 'Table');
   const infoEl = document.getElementById(tableId + 'Info');
 
-  // Build header
-  let thead = '<thead><tr><th>วันที่</th>';
-  showIdx.forEach(i => {
-    thead += `<th title="${data.partners[i]}">${data.partners[i].length > 14 ? data.partners[i].slice(0,13)+'…' : data.partners[i]}</th>`;
+  // Build header: Partner Name column + one column per date
+  let thead = '<thead><tr><th>Partner Name</th>';
+  data.days.forEach(day => {
+    thead += `<th>${day}</th>`;
   });
   thead += '<th>รวม</th></tr></thead>';
 
-  // Build body
+  // Build body: each row = one partner, each column = one date
   let tbody = '<tbody>';
-  data.days.forEach((day, rIdx) => {
+  showIdx.forEach(pIdx => {
+    const partnerName = data.partners[pIdx];
     let rowSum = 0;
-    showIdx.forEach(i => rowSum += data.matrix[rIdx][i]);
-    tbody += `<tr><th>${day}</th>`;
-    showIdx.forEach(i => {
-      const val = data.matrix[rIdx][i];
+    let rowCells = '';
+    data.days.forEach((day, dIdx) => {
+      const val = data.matrix[dIdx][pIdx];
+      rowSum += val;
       const cls = val === 0 ? 'zero' : (val >= 10 ? 'hi' : '');
-      tbody += `<td class="${cls}">${val || '-'}</td>`;
+      rowCells += `<td class="${cls}">${val || '-'}</td>`;
     });
-    tbody += `<td style="font-weight:600;">${rowSum.toLocaleString()}</td></tr>`;
+    tbody += `<tr><th title="${partnerName}">${partnerName.length > 28 ? partnerName.slice(0,27)+'…' : partnerName}</th>${rowCells}<td style="font-weight:600;">${rowSum.toLocaleString()}</td></tr>`;
   });
   tbody += '</tbody>';
 
-  // Build footer (column totals)
-  let colGrandTotal = 0;
+  // Build footer: column totals per date (using full dataset, not just shown rows)
   let tfoot = '<tfoot><tr><th>รวม</th>';
-  showIdx.forEach(i => {
-    const total = data.colTotals[i];
-    colGrandTotal += total;
-    tfoot += `<td>${total.toLocaleString()}</td>`;
+  let colGrandTotal = 0;
+  data.days.forEach((day, dIdx) => {
+    let colTotal = 0;
+    showIdx.forEach(pIdx => colTotal += data.matrix[dIdx][pIdx]);
+    colGrandTotal += colTotal;
+    tfoot += `<td>${colTotal.toLocaleString()}</td>`;
   });
   tfoot += `<td>${colGrandTotal.toLocaleString()}</td></tr></tfoot>`;
 
   table.innerHTML = thead + tbody + tfoot;
 
   infoEl.textContent = truncated
-    ? `แสดง ${showIdx.length} จาก ${colIdx.length} Partner ที่ตรงกับเงื่อนไข (พิมพ์ค้นหาเพื่อกรองเพิ่ม)`
+    ? `แสดง ${showIdx.length} จาก ${rowIdx.length} Partner ที่ตรงกับเงื่อนไข (พิมพ์ค้นหาเพื่อกรองเพิ่ม)`
     : `แสดงทั้งหมด ${showIdx.length} Partner`;
 }
 

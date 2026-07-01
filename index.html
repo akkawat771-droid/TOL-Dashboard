@@ -377,7 +377,7 @@ Chart.unregister(ChartDataLabels);
   <!-- Charts Row 4 -->
   <div class="grid-2">
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">7</span>Pending แยกรายวัน (<span id="monthLabel7">—</span>)</div>      <div class="chart-wrap h155"><canvas id="c7" role="img" aria-label="Pending daily">Pending daily</canvas></div>
+      <div class="chart-title"><span class="chart-num">7</span>Pending แยกรายวัน (<span id="monthLabel7">ก.ค.</span>)</div>      <div class="chart-wrap h155"><canvas id="c7" role="img" aria-label="Pending daily">Pending daily</canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">8</span>Top 10 Partner — Cancel (KPI)</div>      <div class="chart-wrap h155"><canvas id="c8" role="img" aria-label="Top 10 cancel partner">Top cancel partner</canvas></div>
@@ -510,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const nl = AGG.nextLabel  || '';
   document.getElementById('monthLabel1').textContent  = ml;
   document.getElementById('monthLabel2').textContent  = ml;
-  document.getElementById('monthLabel7').textContent  = ml;
+  document.getElementById('monthLabel7').textContent  = nl;
   document.getElementById('nextMonthLabel').textContent = nl;
   document.getElementById('monthLabel11').textContent = ml;
   document.getElementById('monthLabel12').textContent = ml;
@@ -738,8 +738,8 @@ function render() {
   mk('c5','bar',d.c5l,d.c5v,'#7c6fc4',{ia:'y'});
   mk('c6','bar',d.c6l,d.c6v,'#1d9e75',{ia:'y'});
 
-  const pendL = Array.from({length: AGG.pendDays||30}, (_,i)=>String(i+1));
-  mk('c7','bar',pendL,d.c7,d.c7.map(v=>v>=100?'#c0392b':v>=20?'#c47b0a':'#e8a838'));
+  const pendL = AGG.julPendLabels || Array.from({length: AGG.pendDays||30}, (_,i)=>String(i+1));
+  mk('c7','bar',pendL.slice(0,d.c7.length),d.c7,d.c7.map(v=>v>=100?'#c0392b':v>=20?'#c47b0a':'#e8a838'));
 
   if(d.c8l&&d.c8l.length)
     mk('c8','bar',d.c8l,d.c8v,d.c8v.map(v=>v>=20?'#c0392b':v>=10?'#c47b0a':'#4a90d9'),{ia:'y'});

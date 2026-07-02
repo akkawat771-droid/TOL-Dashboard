@@ -305,6 +305,10 @@ Chart.unregister(ChartDataLabels);
       <select id="fR" onchange="onRegion()"></select>
     </div>
     <div class="filter-group">
+      <label>Shop Type</label>
+      <select id="fST" onchange="onShopType()"></select>
+    </div>
+    <div class="filter-group">
       <label>Partner Name</label>
       <select id="fP" onchange="onPartner()"></select>
     </div>
@@ -691,11 +695,14 @@ function mk12(id, labels, regData, cancData, pctData) {
 
 function getDataset() {
   const rgn = document.getElementById('fR').value;
+  const st  = document.getElementById('fST').value;
   const ptn = document.getElementById('fP').value;
   const sal = document.getElementById('fS').value;
   let d;
   if (ptn && AGG.partner[ptn]) {
     d = Object.assign({}, AGG.partner[ptn]);
+  } else if (st && AGG.shopType && AGG.shopType[st]) {
+    d = Object.assign({}, AGG.shopType[st]);
   } else if (rgn && AGG.region[rgn]) {
     d = Object.assign({}, AGG.region[rgn]);
   } else {
@@ -770,6 +777,32 @@ function renderInsights(ins) {
     </div>`).join('');
 }
 
+function initShopType() {
+  const s = document.getElementById('fST');
+  const types = AGG.shopTypes || [];
+  s.innerHTML = '<option value="">— Shop Type ทั้งหมด —</option>' +
+    types.map(t=>`<option>${t}</option>`).join('');
+}
+
+function onShopType() {
+  const st  = document.getElementById('fST').value;
+  const pSel = document.getElementById('fP');
+  let pts = [];
+  if (st && AGG.stPtn && AGG.stPtn[st]) {
+    pts = AGG.stPtn[st];
+  } else {
+    const rgn = document.getElementById('fR').value;
+    if (rgn && AGG.rp[rgn]) {
+      pts = AGG.rp[rgn];
+    } else {
+      pts = Object.values(AGG.rp).flat().filter((v,i,a)=>a.indexOf(v)===i).sort();
+    }
+  }
+  pSel.innerHTML = '<option value="">— ทั้งหมด —</option>' +
+    pts.map(p=>`<option>${p}</option>`).join('');
+  onPartner();
+}
+
 function initRegion() {
   const s = document.getElementById('fR');
   s.innerHTML = '<option value="">— ทั้งหมด —</option>' +
@@ -778,9 +811,16 @@ function initRegion() {
 
 function onRegion() {
   const rgn = document.getElementById('fR').value;
+  const st  = document.getElementById('fST').value;
   const pSel = document.getElementById('fP');
-  const pts = rgn ? AGG.rp[rgn]||[]
-    : Object.values(AGG.rp).flat().filter((v,i,a)=>a.indexOf(v)===i).sort();
+  let pts;
+  if (st && AGG.stPtn && AGG.stPtn[st]) {
+    pts = AGG.stPtn[st];
+    if (rgn) pts = pts.filter(p => (AGG.rp[rgn]||[]).includes(p));
+  } else {
+    pts = rgn ? AGG.rp[rgn]||[]
+      : Object.values(AGG.rp).flat().filter((v,i,a)=>a.indexOf(v)===i).sort();
+  }
   pSel.innerHTML = '<option value="">— ทั้งหมด —</option>' +
     pts.map(p=>`<option>${p}</option>`).join('');
   onPartner();
@@ -808,7 +848,8 @@ function onPartner() {
 }
 
 function resetF() {
-  document.getElementById('fR').value = '';
+  document.getElementById('fR').value  = '';
+  document.getElementById('fST').value = '';
   onRegion();
 }
 
@@ -933,6 +974,7 @@ function changePage(dir) { todoPage += dir; renderTodoTable(); }
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', initTodo);
+initShopType();
 initRegion();
 onRegion();
 </script>

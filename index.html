@@ -381,7 +381,7 @@ Chart.unregister(ChartDataLabels);
   <!-- Charts Row 4 -->
   <div class="grid-2">
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">7</span>Pending แยกรายวัน (<span id="monthLabel7">ส.ค.</span>)</div>      <div class="chart-wrap h155"><canvas id="c7" role="img" aria-label="Pending daily">Pending daily</canvas></div>
+      <div class="chart-title"><span class="chart-num">7</span>Pending แยกรายวัน (<span id="monthLabel7">ก.ค.</span>)</div>      <div class="chart-wrap h155"><canvas id="c7" role="img" aria-label="Pending daily">Pending daily</canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title"><span class="chart-num">8</span>Top 10 Partner — Cancel (KPI)</div>      <div class="chart-wrap h155"><canvas id="c8" role="img" aria-label="Top 10 cancel partner">Top cancel partner</canvas></div>
@@ -514,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const nl = AGG.nextLabel  || '';
   document.getElementById('monthLabel1').textContent  = ml;
   document.getElementById('monthLabel2').textContent  = ml;
-  document.getElementById('monthLabel7').textContent  = nl;
+  document.getElementById('monthLabel7').textContent  = ml;
   document.getElementById('nextMonthLabel').textContent = nl;
   if(document.getElementById('monthLabel9')) document.getElementById('monthLabel9').textContent = ml;
   document.getElementById('monthLabel11').textContent = ml;

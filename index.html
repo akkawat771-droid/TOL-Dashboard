@@ -391,11 +391,11 @@ Chart.unregister(ChartDataLabels);
   <!-- Chart 9 & 10 -->
   <div class="grid-2" style="margin-bottom:.875rem;">
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">9</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน <span id="nextMonthLabel">—</span> ตาม Region WW</div>
+      <div class="chart-title"><span class="chart-num">9</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน <span id="monthLabel9">ก.ค.</span> ตาม Region WW</div>
       <div class="chart-wrap h280"><canvas id="c9" role="img" aria-label="July pending by region">July pending by region</canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">10</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน ส.ค. ตาม Partner Name (Top 15)</div>
+      <div class="chart-title"><span class="chart-num">10</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน ก.ค. ตาม Partner Name (Top 15)</div>
       <div class="chart-wrap h280"><canvas id="c10" role="img" aria-label="July pending by partner">July pending by partner</canvas></div>
     </div>
   </div>
@@ -516,6 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('monthLabel2').textContent  = ml;
   document.getElementById('monthLabel7').textContent  = nl;
   document.getElementById('nextMonthLabel').textContent = nl;
+  if(document.getElementById('monthLabel9')) document.getElementById('monthLabel9').textContent = ml;
   document.getElementById('monthLabel11').textContent = ml;
   document.getElementById('monthLabel12').textContent = ml;
   document.getElementById('mPendNextLabel').textContent = nl;

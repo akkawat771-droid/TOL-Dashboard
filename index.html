@@ -142,9 +142,9 @@ Chart.unregister(ChartDataLabels);
     padding: 14px 16px;
     box-shadow: var(--shadow);
   }
-  .metric-label { font-size: 11px; color: var(--text2); font-weight: 500; }
-  .metric-value { font-size: 26px; font-weight: 700; margin: 2px 0; letter-spacing: -0.5px; }
-  .metric-sub { font-size: 10px; color: var(--text3); }
+  .metric-label { font-size: 10px; color: var(--text2); font-weight: 500; }
+  .metric-value { font-size: 20px; font-weight: 700; margin: 2px 0; letter-spacing: -0.5px; }
+  .metric-sub { font-size: 9px; color: var(--text3); }
   .green { color: var(--green); }
   .amber { color: var(--amber); }
   .red { color: var(--red); }
@@ -320,7 +320,7 @@ Chart.unregister(ChartDataLabels);
   </div>
 
   <!-- Metrics Banner -->
-  <div class="metrics" style="grid-template-columns:repeat(5,1fr);">
+  <div class="metrics" style="grid-template-columns:repeat(9,1fr);">
     <div class="metric-card">
       <div class="metric-label">ยอด Register</div>
       <div class="metric-value" id="mR">—</div>
@@ -345,6 +345,26 @@ Chart.unregister(ChartDataLabels);
       <div class="metric-label">Pending รอติดตั้ง <span id="mPendNextLabel">ก.ค.</span></div>
       <div class="metric-value" id="mPendNext" style="color:#7c6fc4;">—</div>
       <div class="metric-sub">TOL-REGISTER</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #1a6fb5;">
+      <div class="metric-label">Connect Matching</div>
+      <div class="metric-value" id="mConMatch" style="color:#1a6fb5;">—</div>
+      <div class="metric-sub">Shop Type</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #5a8a5a;">
+      <div class="metric-label">Connect Non-Matching</div>
+      <div class="metric-value" id="mConNonMatch" style="color:#5a8a5a;">—</div>
+      <div class="metric-sub">Shop Type</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #c47b0a;">
+      <div class="metric-label">Connect Hall</div>
+      <div class="metric-value" id="mConHall" style="color:#c47b0a;">—</div>
+      <div class="metric-sub">Shop Type</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #7c6fc4;">
+      <div class="metric-label">Connect COCO</div>
+      <div class="metric-value" id="mConCOCO" style="color:#7c6fc4;">—</div>
+      <div class="metric-sub">Shop Type</div>
     </div>
   </div>
 
@@ -733,6 +753,11 @@ function render() {
   document.getElementById('mCa').textContent = d.canc.toLocaleString();
   const pendNextTotal = (d.c9v && d.c9v.length) ? d.c9v.reduce((a,b)=>a+b,0) : 0;
   document.getElementById('mPendNext').textContent = pendNextTotal.toLocaleString();
+  const cst = d.conByST || {};
+  document.getElementById('mConMatch').textContent    = (cst['Matching']     || 0).toLocaleString();
+  document.getElementById('mConNonMatch').textContent = (cst['Non Matching'] || 0).toLocaleString();
+  document.getElementById('mConHall').textContent     = (cst['Hall']         || 0).toLocaleString();
+  document.getElementById('mConCOCO').textContent     = (cst['COCO']         || 0).toLocaleString();
 
   mk('c1','bar',  REGL.slice(0,d.c1.length), d.c1, '#1a6fb5');
   mk('c2','line', CONL.slice(0,d.c2.length), d.c2, '#0f7c5a');

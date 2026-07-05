@@ -309,7 +309,7 @@ Chart.unregister(ChartDataLabels);
       <select id="fST" onchange="onShopType()"></select>
     </div>
     <div class="filter-group">
-      <label>Partner Name</label>
+      <label>Shop Name</label>
       <select id="fP" onchange="onPartner()"></select>
     </div>
     <div class="filter-group">
@@ -394,7 +394,7 @@ Chart.unregister(ChartDataLabels);
       <div class="chart-title"><span class="chart-num">5</span>แพ็กเกจยอดนิยม Top 5 (KPI + Connect)</div>      <div class="chart-wrap h220"><canvas id="c5" role="img" aria-label="Top 5 packages">Top packages</canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">6</span>Top 5 Partner — TOL-CONNECT</div>      <div class="chart-wrap h220"><canvas id="c6" role="img" aria-label="Top 5 partner connect">Top partner connect</canvas></div>
+      <div class="chart-title"><span class="chart-num">6</span>Top 5 Shop Name — TOL-CONNECT</div>      <div class="chart-wrap h220"><canvas id="c6" role="img" aria-label="Top 5 partner connect">Top partner connect</canvas></div>
     </div>
   </div>
 
@@ -404,7 +404,7 @@ Chart.unregister(ChartDataLabels);
       <div class="chart-title"><span class="chart-num">7</span>Pending แยกรายวัน (<span id="monthLabel7">ก.ค.</span>)</div>      <div class="chart-wrap h155"><canvas id="c7" role="img" aria-label="Pending daily">Pending daily</canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">8</span>Top 10 Partner — Cancel (KPI)</div>      <div class="chart-wrap h155"><canvas id="c8" role="img" aria-label="Top 10 cancel partner">Top cancel partner</canvas></div>
+      <div class="chart-title"><span class="chart-num">8</span>Top 10 Shop Name — Cancel</div>      <div class="chart-wrap h155"><canvas id="c8" role="img" aria-label="Top 10 cancel partner">Top cancel partner</canvas></div>
     </div>
   </div>
 
@@ -415,7 +415,7 @@ Chart.unregister(ChartDataLabels);
       <div class="chart-wrap h280"><canvas id="c9" role="img" aria-label="July pending by region">July pending by region</canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title"><span class="chart-num">10</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน ก.ค. ตาม Partner Name (Top 15)</div>
+      <div class="chart-title"><span class="chart-num">10</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน ก.ค. ตาม Shop Name (Top 15)</div>
       <div class="chart-wrap h280"><canvas id="c10" role="img" aria-label="July pending by partner">July pending by partner</canvas></div>
     </div>
   </div>
@@ -720,8 +720,8 @@ function getDataset() {
   const ptn = document.getElementById('fP').value;
   const sal = document.getElementById('fS').value;
   let d;
-  if (ptn && AGG.partner[ptn]) {
-    d = Object.assign({}, AGG.partner[ptn]);
+  if (ptn && AGG.shop[ptn]) {
+    d = Object.assign({}, AGG.shop[ptn]);
   } else if (st && AGG.shopType && AGG.shopType[st]) {
     d = Object.assign({}, AGG.shopType[st]);
   } else if (rgn && AGG.region[rgn]) {

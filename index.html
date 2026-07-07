@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOL True Shop WW — KPI Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script>
+// Unregister global datalabels so we control per-chart
+Chart.unregister(ChartDataLabels);
+</script>
+<script src="data.js"></script>
+<script src="todo.js"></script>
+<script src="sale_data.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: rgba(0,0,0,0.10);
+    --text: #1a1a1a;
+    --text2: #5c5c5c;
+    --text3: #9a9a9a;
+    --green: #0f7c5a;
+    --amber: #c47b0a;
+    --red: #c0392b;
+    --blue: #1a6fb5;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: 'Sarabun', 'Noto Sans Thai', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .header-left h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+  .header-left p {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 1px;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+    margin-left: 6px;
+  }
+  .badge-blue {
+    background: #e3f0fb;
+    color: #0c4578;
+    border-color: #90c4ef;
+  }
+
+  /* ── Layout ── */
+  .main { padding: 16px 24px 32px; max-width: 1400px; margin: 0 auto; }
+
+  /* ── Filter Bar ── */
+  .filter-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 12px 16px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 16px;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 3px; }
+  .filter-group label { font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+  .filter-group select {
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    min-width: 160px;
+    max-width: 220px;
+  }
+  .filter-group select:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+  .btn-reset {
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text2);
+    cursor: pointer;
+    align-self: flex-end;
+    transition: background 0.15s;
+  }
+  .btn-reset:hover { background: #e8e6e0; }
+
+  /* ── Metrics ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .metric-label { font-size: 10px; color: var(--text2); font-weight: 500; }
+  .metric-value { font-size: 20px; font-weight: 700; margin: 2px 0; letter-spacing: -0.5px; }
+  .metric-sub { font-size: 9px; color: var(--text3); }
+  .green { color: var(--green); }
+  .amber { color: var(--amber); }
+  .red { color: var(--red); }
+
+  /* ── Chart Grid ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .grid-1 { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .chart-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chart-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text2);
+  }
+  .chart-wrap { position: relative; width: 100%; }
+  .h155 { height: 155px; }
+  .h280 { height: 280px; }
+  .h220 { height: 220px; }
+  .h160 { height: 160px; }
+  .h310 { height: 310px; }
+
+  /* ── Insights ── */
+  .insights { margin-top: 4px; }
+  .insight {
+    padding: 10px 14px;
+    border-left: 3px solid;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .insight-red { border-color: #c0392b; background: #fdf2f1; }
+  .insight-amber { border-color: #c47b0a; background: #fdf8ee; }
+  .insight-green { border-color: #0f7c5a; background: #f0faf6; }
+  .action-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 8px;
+    background: #e3f0fb;
+    color: #0c4578;
+    margin: 3px 3px 0 0;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 20px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: var(--blue);
+    border-radius: 2px;
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text3);
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .main { padding: 12px 12px 24px; }
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .header { padding: 10px 14px; }
+    .metric-value { font-size: 20px; }
+  }
+
+  /* ── To-Do List ── */
+  .todo-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .todo-summary{display:flex;gap:8px;flex-wrap:wrap;}
+  .todo-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;transition:opacity .15s;}
+  .todo-badge:hover{opacity:.8;}
+  .badge-critical{background:#fde8e8;color:#c0392b;border:1px solid #f5b7b7;}
+  .badge-high{background:#fef0e0;color:#c47b0a;border:1px solid #f9c978;}
+  .badge-medium{background:#fefce0;color:#8a7200;border:1px solid #e8d800;}
+  .badge-schedule{background:#e3f0fb;color:#1a6fb5;border:1px solid #90c4ef;}
+  .badge-all{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+  .todo-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
+  .todo-search{font-size:12px;padding:5px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);width:220px;}
+  .todo-table-wrap{overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--border);}
+  table.todo{width:100%;border-collapse:collapse;font-size:12px;}
+  table.todo thead th{background:var(--surface2);padding:8px 10px;text-align:left;font-weight:600;color:var(--text2);white-space:nowrap;border-bottom:1px solid var(--border);position:sticky;top:0;}
+  table.todo tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+  table.todo tbody tr:hover{background:var(--surface2);}
+  table.todo tbody td{padding:7px 10px;vertical-align:middle;white-space:nowrap;}
+  .pri-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;flex-shrink:0;}
+  .dot-critical{background:#c0392b;}
+  .dot-high{background:#c47b0a;}
+  .dot-medium{background:#c4b700;}
+  .dot-schedule{background:#1a6fb5;}
+  .asset-chip{font-family:monospace;font-size:11px;background:var(--surface2);padding:2px 7px;border-radius:4px;border:1px solid var(--border);white-space:nowrap;}
+  .todo-pagination{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:11px;color:var(--text2);}
+  .page-btn{font-size:11px;padding:3px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);cursor:pointer;}
+  .page-btn:disabled{opacity:.4;cursor:default;}
+  .page-btn:not(:disabled):hover{background:var(--surface2);}
+  .todo-empty{text-align:center;padding:32px;color:var(--text3);font-size:13px;}
+
+  /* ── Multi-Select Dropdown ── */
+  .ms-wrap { position: relative; }
+  .ms-btn {
+    font-size: 12px; padding: 5px 28px 5px 8px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--bg); color: var(--text);
+    cursor: pointer; text-align: left; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; min-width: 140px; max-width: 220px;
+    position: relative; display: flex; align-items: center; justify-content: space-between;
+  }
+  .ms-btn::after { content: '▾'; font-size: 10px; color: var(--text2); margin-left: 4px; flex-shrink: 0; }
+  .ms-btn.active { border-color: var(--blue); }
+  .ms-dropdown {
+    display: none; position: absolute; top: calc(100% + 4px); left: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    z-index: 500; min-width: 200px; max-height: 280px; overflow-y: auto;
+    padding: 4px 0;
+  }
+  .ms-dropdown.open { display: block; }
+  .ms-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 12px; font-size: 12px; cursor: pointer;
+    color: var(--text); transition: background .1s;
+  }
+  .ms-item:hover { background: var(--surface2); }
+  .ms-item input[type=checkbox] { accent-color: var(--blue); width: 13px; height: 13px; cursor: pointer; flex-shrink: 0; }
+  .ms-clear { font-size: 11px; padding: 4px 12px; color: var(--text2); cursor: pointer; border-top: 1px solid var(--border); margin-top: 2px; }
+  .ms-clear:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>TOL True Shop WW — KPI Dashboard</h1>
+    <p>Data as of <strong id="asOfLabel">—</strong>
+      <span class="badge">FLAG_KPI = KPI</span>
+      <span class="badge badge-blue">SUBS_STATUS ≠ Blank</span>
+    </p>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <span style="font-size:11px;color:var(--text2);padding-bottom:4px;white-space:nowrap;font-weight:600;">
+      &#9660; Filter
+    </span>
+    <div class="filter-group">
+      <label>Region WW</label>
+      <select id="fR" onchange="onRegion()"></select>
+    </div>
+    <div class="filter-group">
+      <label>Shop Type</label>
+      <div class="ms-wrap" id="wrapST">
+        <button class="ms-btn" id="btnST" onclick="toggleDropdown('ST')" type="button">
+          <span id="lblST">— ทั้งหมด —</span>
+        </button>
+        <div class="ms-dropdown" id="ddST"></div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Shop Name</label>
+      <div class="ms-wrap" id="wrapP">
+        <button class="ms-btn" id="btnP" onclick="toggleDropdown('P')" type="button">
+          <span id="lblP">— ทั้งหมด —</span>
+        </button>
+        <div class="ms-dropdown" id="ddP"></div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Sale Represent</label>
+      <select id="fS" onchange="render()"></select>
+    </div>
+    <button class="btn-reset" onclick="resetF()">Reset ↺</button>
+  </div>
+
+  <!-- Metrics Banner -->
+  <div class="metrics" style="grid-template-columns:repeat(9,1fr);">
+    <div class="metric-card">
+      <div class="metric-label">ยอด Register</div>
+      <div class="metric-value" id="mR">—</div>
+      <div class="metric-sub">TOL-REGISTER</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">ยอด Connect</div>
+      <div class="metric-value green" id="mC">—</div>
+      <div class="metric-sub">TOL-CONNECT</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Pending</div>
+      <div class="metric-value amber" id="mPe">—</div>
+      <div class="metric-sub">SUBS_STATUS</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Cancel</div>
+      <div class="metric-value red" id="mCa">—</div>
+      <div class="metric-sub">SUBS_STATUS</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Pending รอติดตั้ง <span id="mPendNextLabel">ก.ค.</span></div>
+      <div class="metric-value" id="mPendNext" style="color:#7c6fc4;">—</div>
+      <div class="metric-sub">TOL-REGISTER</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #1a6fb5;">
+      <div class="metric-label">Connect Matching</div>
+      <div class="metric-value" id="mConMatch" style="color:#1a6fb5;">—</div>
+      <div class="metric-sub">Shop Type</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #5a8a5a;">
+      <div class="metric-label">Connect Non-Matching</div>
+      <div class="metric-value" id="mConNonMatch" style="color:#5a8a5a;">—</div>
+      <div class="metric-sub">Shop Type</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #c47b0a;">
+      <div class="metric-label">Connect Hall</div>
+      <div class="metric-value" id="mConHall" style="color:#c47b0a;">—</div>
+      <div class="metric-sub">Shop Type</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #7c6fc4;">
+      <div class="metric-label">Connect COCO</div>
+      <div class="metric-value" id="mConCOCO" style="color:#7c6fc4;">—</div>
+      <div class="metric-sub">Shop Type</div>
+    </div>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">1</span>TOL-REGISTER รายวัน — วันที่ Register (<span id="monthLabel1">—</span>)</div>      <div class="chart-wrap h155"><canvas id="c1" role="img" aria-label="Register daily">Register daily</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">2</span>TOL-CONNECT รายวัน (<span id="monthLabel2">—</span>)</div>      <div class="chart-wrap h155"><canvas id="c2" role="img" aria-label="Connect daily">Connect daily</canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">3</span>Cancel Rate % ตาม Region WW</div>      <div class="chart-wrap h310"><canvas id="c3" role="img" aria-label="Cancel rate by region">Cancel rate</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">4</span>Pending Rate % ตาม Region WW</div>      <div class="chart-wrap h310"><canvas id="c4" role="img" aria-label="Pending rate by region">Pending rate</canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 3 -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">5</span>แพ็กเกจยอดนิยม Top 5 (KPI + Connect)</div>      <div class="chart-wrap h220"><canvas id="c5" role="img" aria-label="Top 5 packages">Top packages</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">6</span>Top 5 Shop Name — TOL-CONNECT</div>      <div class="chart-wrap h220"><canvas id="c6" role="img" aria-label="Top 5 partner connect">Top partner connect</canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 4 -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">7</span>Pending แยกรายวัน (<span id="monthLabel7">ก.ค.</span>)</div>      <div class="chart-wrap h155"><canvas id="c7" role="img" aria-label="Pending daily">Pending daily</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">8</span>Top 10 Shop Name — Cancel</div>      <div class="chart-wrap h155"><canvas id="c8" role="img" aria-label="Top 10 cancel partner">Top cancel partner</canvas></div>
+    </div>
+  </div>
+
+  <!-- Chart 9 & 10 -->
+  <div class="grid-2" style="margin-bottom:.875rem;">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">9</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน <span id="monthLabel9">ก.ค.</span> ตาม Region WW</div>
+      <div class="chart-wrap h280"><canvas id="c9" role="img" aria-label="July pending by region">July pending by region</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">10</span>TOL-REGISTER ที่รอติดตั้ง (Pending) เดือน ก.ค. ตาม Shop Name (Top 15)</div>
+      <div class="chart-wrap h280"><canvas id="c10" role="img" aria-label="July pending by partner">July pending by partner</canvas></div>
+    </div>
+  </div>
+
+  <!-- Chart 11 & 12 -->
+  <div class="grid-2" style="margin-bottom:.875rem;">
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">11</span>จำนวน Cancel รายวัน — อ้างอิงวันที่ Register (<span id="monthLabel11">ก.ค.</span>)</div>
+      <div class="chart-wrap h200"><canvas id="c11" role="img" aria-label="Cancel daily by register day">Cancel daily by register day</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-num">12</span>Cancel vs Register รายวัน + %Cancel (<span id="monthLabel12">ก.ค.</span>)</div>
+      <div class="chart-wrap h200"><canvas id="c12" role="img" aria-label="Cancel vs Register dual axis">Cancel vs Register dual axis</canvas></div>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="section-title">สรุปวิเคราะห์และข้อแนะนำ</div>
+  <div class="insights" id="insightBox">
+    <!-- Dynamic insights rendered by JS -->
+  </div>
+
+</main>
+
+<!-- To-Do List Section -->
+<section class="main" style="padding-top:0;">
+  <div class="chart-card" style="margin-bottom:0;">
+    <div class="todo-header">
+      <div>
+        <div class="section-title" style="margin:0 0 4px;">รายการที่ต้อง Monitor การติดตั้ง (Pending)</div>
+        <p style="font-size:11px;color:var(--text2);margin:0;">
+          ข้อมูล ณ วันที่ <span id="todoAsOf">—</span> &nbsp;|&nbsp; Pending ทั้งหมด <strong id="todoTotal">—</strong> Link
+        </p>
+      </div>
+      <div class="todo-summary" id="todoBadges">
+        <span class="todo-badge badge-critical" onclick="filterTodo('critical')">🔴 เร่งด่วนมาก ≥7 วัน <span id="bcritical">0</span></span>
+        <span class="todo-badge badge-high"     onclick="filterTodo('high')"    >🟠 เร่งด่วน 3-6 วัน <span id="bhigh">0</span></span>
+        <span class="todo-badge badge-medium"   onclick="filterTodo('medium')"  >🟡 ติดตาม 0-2 วัน <span id="bmedium">0</span></span>
+        <span class="todo-badge badge-schedule" onclick="filterTodo('schedule')" >🔵 นัดล่วงหน้า <span id="bschedule">0</span></span>
+        <span class="todo-badge badge-all"      onclick="filterTodo('all')"     >ทั้งหมด</span>
+      </div>
+    </div>
+
+    <div class="todo-toolbar">
+      <input class="todo-search" id="todoSearch" type="text"
+        placeholder="ค้นหา ASSET_NUM, Partner, Sale, Handler..."
+        oninput="searchTodo()">
+      <select style="font-size:12px;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);"
+        id="todoRegionFilter" onchange="searchTodo()">
+        <option value="">— Region ทั้งหมด —</option>
+      </select>
+      <select style="font-size:12px;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);"
+        id="todoPartnerFilter" onchange="searchTodo()">
+        <option value="">— Partner ทั้งหมด —</option>
+      </select>
+      <select style="font-size:12px;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);"
+        id="todoAppointFilter" onchange="searchTodo()">
+        <option value="">— วันนัด (APPOINT_DAY) ทั้งหมด —</option>
+      </select>
+      <select style="font-size:12px;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);"
+        id="todoSaleFilter" onchange="searchTodo()">
+        <option value="">— Sale ทั้งหมด —</option>
+      </select>
+      <span id="todoCount" style="font-size:11px;color:var(--text2);"></span>
+    </div>
+
+    <div class="todo-table-wrap">
+      <table class="todo" role="grid" aria-label="Pending To-Do List">
+        <thead>
+          <tr>
+            <th>ลำดับ</th>
+            <th>Priority</th>
+            <th>ASSET_NUM</th>
+            <th>วันนัด</th>
+            <th>รออยู่ (วัน)</th>
+            <th>Partner</th>
+            <th>Region WW</th>
+            <th>Sale Represent</th>
+            <th>Package</th>
+            <th>Handler</th>
+            <th>Subcontract</th>
+          </tr>
+        </thead>
+        <tbody id="todoBody">
+          <tr><td colspan="11" class="todo-empty">กำลังโหลด...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="todo-pagination">
+      <button class="page-btn" id="btnPrev" onclick="changePage(-1)" disabled>◀ ก่อนหน้า</button>
+      <span id="pageInfo" style="font-size:11px;color:var(--text2);">หน้า 1</span>
+      <button class="page-btn" id="btnNext" onclick="changePage(1)">ถัดไป ▶</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  TOL True Shop WW KPI Dashboard &nbsp;|&nbsp; Data as of <span id="asOfFooter">—</span> &nbsp;|&nbsp; FLAG_KPI = KPI
+</footer>
+
+<script>
+const L30  = Array.from({length:30}, (_,i) => String(i+1));
+const L23  = Array.from({length:23}, (_,i) => String(i+1));
+const REGL  = AGG.regLabels    || L23;
+const CONL  = AGG.conLabels    || L23;
+const CANCL = AGG.cancelLabels || L23;
+const ch   = {};
+
+// Set dynamic labels on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const al = AGG.asOf || '';
+  document.getElementById('asOfLabel').textContent  = al;
+  document.getElementById('asOfFooter').textContent = al;
+  const ml = AGG.monthLabel || '';
+  const nl = AGG.nextLabel  || '';
+  document.getElementById('monthLabel1').textContent  = ml;
+  document.getElementById('monthLabel2').textContent  = ml;
+  document.getElementById('monthLabel7').textContent  = ml;
+  document.getElementById('nextMonthLabel').textContent = nl;
+  if(document.getElementById('monthLabel9')) document.getElementById('monthLabel9').textContent = ml;
+  document.getElementById('monthLabel11').textContent = ml;
+  document.getElementById('monthLabel12').textContent = ml;
+  document.getElementById('mPendNextLabel').textContent = nl;
+});
+
+function mk(id, type, labels, data, color, opts={}) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (ch[id]) ch[id].destroy();
+  const isH  = opts.ia === 'y';
+  const isPct = !!opts.pct;
+
+  const dlabels = {
+    display: true,
+    color: '#444',
+    font: { size: 9, weight: '600' },
+    formatter: (val) => {
+      if (val === 0 || val === null || val === undefined) return '';
+      if (isPct) return (typeof val === 'number' ? val.toFixed(1) : val) + '%';
+      return Number(val).toLocaleString();
+    },
+    anchor: isH ? 'end' : 'end',
+    align:  isH ? 'right' : 'top',
+    clamp:  true,
+    padding: { left: 2, right: 2 },
+  };
+
+  ch[id] = new Chart(ctx, {
+    type,
+    data: { labels, datasets: [{ label:'', data,
+      backgroundColor: color, borderColor: color,
+      borderWidth: type==='line' ? 2 : 0,
+      borderRadius: type==='bar'  ? 3 : 0,
+      fill: type==='line' ? 'origin' : false,
+      tension: 0.3, pointRadius: type==='line' ? 3 : 0,
+      datalabels: dlabels
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: isH ? 2 : 18, right: isH ? 42 : 4 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => isPct
+          ? (typeof c.raw==='number' ? c.raw.toFixed(1):'0')+'%'
+          : Number(c.raw).toLocaleString() }},
+        datalabels: dlabels
+      },
+      indexAxis: opts.ia || 'x',
+      scales: {
+        x: {
+          ticks: { font:{size:10}, color:'#888', maxRotation:0,
+            callback: isH
+              ? (isPct ? v => v+'%' : v => Number(v).toLocaleString())
+              : (v,i) => labels[i] !== undefined ? labels[i] : v
+          },
+          grid: { display: isH, color:'rgba(0,0,0,0.05)' },
+          ...(isH ? { beginAtZero: true } : {})
+        },
+        y: {
+          ticks: { font:{size:10}, color:'#888',
+            callback: isH
+              ? (v,i) => labels[i] !== undefined ? labels[i] : v
+              : isPct ? v => v+'%'
+              : v => Number(v).toLocaleString()
+          },
+          grid: { display: !isH, color:'rgba(0,0,0,0.05)' },
+          ...(isH ? {} : { beginAtZero: true })
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+function mk12(id, labels, regData, cancData, pctData) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (ch[id]) ch[id].destroy();
+
+  ch[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Register',
+          data: regData,
+          backgroundColor: 'rgba(26,111,181,0.6)',
+          borderColor: '#1a6fb5',
+          borderWidth: 0,
+          borderRadius: 3,
+          yAxisID: 'yLeft',
+          order: 2,
+          datalabels: { display: false }
+        },
+        {
+          label: 'Cancel',
+          data: cancData,
+          backgroundColor: 'rgba(192,57,43,0.8)',
+          borderColor: '#c0392b',
+          borderWidth: 0,
+          borderRadius: 3,
+          yAxisID: 'yLeft',
+          order: 1,
+          datalabels: { display: false }
+        },
+        {
+          label: '%Cancel',
+          data: pctData,
+          type: 'line',
+          borderColor: '#e8a838',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#e8a838',
+          tension: 0.3,
+          yAxisID: 'yRight',
+          order: 0,
+          datalabels: {
+            display: true,
+            color: '#b37a00',
+            font: { size: 8, weight: '700' },
+            formatter: v => v > 0 ? v.toFixed(1)+'%' : '',
+            anchor: 'end',
+            align: 'top',
+            clamp: true,
+          }
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 20 } },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { font: { size: 10 }, boxWidth: 12, padding: 8 }
+        },
+        tooltip: {
+          callbacks: {
+            label: c => c.dataset.label === '%Cancel'
+              ? c.dataset.label + ': ' + c.raw.toFixed(1) + '%'
+              : c.dataset.label + ': ' + Number(c.raw).toLocaleString()
+          }
+        },
+        datalabels: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { font: { size: 10 }, color: '#888', maxRotation: 0,
+            callback: (v, i) => labels[i] !== undefined ? labels[i] : v },
+          grid: { display: false }
+        },
+        yLeft: {
+          type: 'linear', position: 'left',
+          ticks: { font: { size: 10 }, color: '#888',
+            callback: v => Number(v).toLocaleString() },
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          beginAtZero: true,
+          title: { display: true, text: 'จำนวนราย', font: { size: 10 }, color: '#888' }
+        },
+        yRight: {
+          type: 'linear', position: 'right',
+          ticks: { font: { size: 10 }, color: '#e8a838',
+            callback: v => v + '%' },
+          grid: { drawOnChartArea: false },
+          beginAtZero: true,
+          title: { display: true, text: '%Cancel', font: { size: 10 }, color: '#e8a838' }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+function mergeAggs(aggList) {
+  // Merge multiple agg objects by summing numeric arrays and scalars
+  if (aggList.length === 0) return Object.assign({}, AGG.global);
+  if (aggList.length === 1) return Object.assign({}, aggList[0]);
+  const merged = {};
+  const first = aggList[0];
+  Object.keys(first).forEach(k => {
+    const vals = aggList.map(a => a[k]);
+    if (k === 'ins') { merged[k] = first[k]; return; }
+    if (k === 'conByST') {
+      const r = {};
+      Object.keys(first[k]||{}).forEach(st => { r[st] = aggList.reduce((s,a)=>s+(a[k]&&a[k][st]||0),0); });
+      merged[k] = r; return;
+    }
+    if (Array.isArray(first[k])) {
+      merged[k] = first[k].map((_,i) => vals.reduce((s,v)=>s+(Array.isArray(v)?v[i]||0:0),0));
+    } else if (typeof first[k]==='number') {
+      merged[k] = vals.reduce((s,v)=>s+(typeof v==='number'?v:0),0);
+    } else { merged[k] = first[k]; }
+  });
+  return merged;
+}
+
+function getDataset() {
+  const rgn = document.getElementById('fR').value;
+  const sal = document.getElementById('fS').value;
+  let d;
+
+  if (selP.size > 0 && AGG.shop) {
+    // Multiple shops selected — merge their aggregates
+    const aggs = [...selP].filter(p=>AGG.shop[p]).map(p=>AGG.shop[p]);
+    d = aggs.length > 0 ? mergeAggs(aggs) : Object.assign({}, AGG.global);
+  } else if (selST.size > 0 && AGG.shopType) {
+    if (selST.size === 1) {
+      const st = [...selST][0];
+      d = Object.assign({}, AGG.shopType[st] || AGG.global);
+    } else {
+      const aggs = [...selST].filter(st=>AGG.shopType[st]).map(st=>AGG.shopType[st]);
+      d = aggs.length > 0 ? mergeAggs(aggs) : Object.assign({}, AGG.global);
+    }
+  } else if (rgn && AGG.region[rgn]) {
+    d = Object.assign({}, AGG.region[rgn]);
+  } else {
+    d = Object.assign({}, AGG.global);
+  }
+
+  if (sal && typeof SALE_AGG !== 'undefined' && SALE_AGG[sal]) {
+    const s = SALE_AGG[sal];
+    d = Object.assign({}, d, {
+      reg:s.reg, con:s.con, pend:s.pend, canc:s.canc,
+      c1:s.c1, c2:s.c2, c11:s.c11,
+      c12_reg:s.c12_reg, c12_canc:s.c12_canc, c12_pct:s.c12_pct,
+    });
+  }
+  return d;
+}
+
+function render() {
+  const d = getDataset();
+  document.getElementById('mR').textContent  = d.reg.toLocaleString();
+  document.getElementById('mC').textContent  = d.con.toLocaleString();
+  document.getElementById('mPe').textContent = d.pend.toLocaleString();
+  document.getElementById('mCa').textContent = d.canc.toLocaleString();
+  const pendNextTotal = (d.c9v && d.c9v.length) ? d.c9v.reduce((a,b)=>a+b,0) : 0;
+  document.getElementById('mPendNext').textContent = pendNextTotal.toLocaleString();
+  const cst = d.conByST || {};
+  document.getElementById('mConMatch').textContent    = (cst['Matching']     || 0).toLocaleString();
+  document.getElementById('mConNonMatch').textContent = (cst['Non Matching'] || 0).toLocaleString();
+  document.getElementById('mConHall').textContent     = (cst['Hall']         || 0).toLocaleString();
+  document.getElementById('mConCOCO').textContent     = (cst['COCO']         || 0).toLocaleString();
+
+  mk('c1','bar',  REGL.slice(0,d.c1.length), d.c1, '#1a6fb5');
+  mk('c2','line', CONL.slice(0,d.c2.length), d.c2, '#0f7c5a');
+
+  const c3l=d.c3l.filter(l=>l), c3v=d.c3v.filter((_,i)=>d.c3l[i]);
+  mk('c3','bar',c3l,c3v,c3v.map(v=>v>=8?'#c0392b':v>=6?'#c47b0a':'#4a90d9'),{ia:'y',pct:true});
+
+  const c4l=d.c4l.filter(l=>l), c4v=d.c4v.filter((_,i)=>d.c4l[i]);
+  mk('c4','bar',c4l,c4v,c4v.map(v=>v>=10?'#c0392b':v>=8?'#c47b0a':'#e8a838'),{ia:'y',pct:true});
+
+  mk('c5','bar',d.c5l,d.c5v,'#7c6fc4',{ia:'y'});
+  mk('c6','bar',d.c6l,d.c6v,'#1d9e75',{ia:'y'});
+
+  const pendL = AGG.julPendLabels || Array.from({length: AGG.pendDays||30}, (_,i)=>String(i+1));
+  mk('c7','bar',pendL.slice(0,d.c7.length),d.c7,d.c7.map(v=>v>=100?'#c0392b':v>=20?'#c47b0a':'#e8a838'));
+
+  if(d.c8l&&d.c8l.length)
+    mk('c8','bar',d.c8l,d.c8v,d.c8v.map(v=>v>=20?'#c0392b':v>=10?'#c47b0a':'#4a90d9'),{ia:'y'});
+  if(d.c9l&&d.c9l.length)
+    mk('c9','bar',d.c9l,d.c9v,d.c9v.map(v=>v>=10?'#c0392b':v>=5?'#c47b0a':'#4a90d9'),{ia:'y'});
+  if(d.c10l&&d.c10l.length)
+    mk('c10','bar',d.c10l,d.c10v,d.c10v.map(v=>v>=10?'#c0392b':v>=5?'#c47b0a':'#4a90d9'),{ia:'y'});
+  if(d.c11&&d.c11.length)
+    mk('c11','bar',CANCL.slice(0,d.c11.length),d.c11,d.c11.map(v=>v>=40?'#c0392b':v>=20?'#c47b0a':'#E24B4A'));
+  if(d.c12_reg&&d.c12_reg.length)
+    mk12('c12', CANCL.slice(0,d.c12_reg.length), d.c12_reg, d.c12_canc, d.c12_pct);
+
+  renderInsights(d.ins||[]);
+}
+
+const TYPE_CLASS = {danger:'insight-red', amber:'insight-amber', green:'insight-green'};
+
+function renderInsights(ins) {
+  const box = document.getElementById('insightBox');
+  if (!ins || ins.length===0) {
+    box.innerHTML = '<div class="insight insight-green"><strong>ไม่พบประเด็นที่น่ากังวล</strong><br>ข้อมูลในช่วงที่เลือกอยู่ในเกณฑ์ปกติ</div>';
+    return;
+  }
+  box.innerHTML = ins.map(i => `
+    <div class="insight ${TYPE_CLASS[i.t]||'insight-amber'}">
+      <strong>${i.h}</strong><br>${i.b}
+      <br><span class="action-tag">Action</span> ${i.a}
+    </div>`).join('');
+}
+
+// ── Multi-Select State ──
+let selST = new Set();   // selected shop types
+let selP  = new Set();   // selected shop names
+
+function buildDropdown(ddId, items, selSet, onChangeFn) {
+  const dd = document.getElementById(ddId);
+  dd.innerHTML = items.map(item => `
+    <label class="ms-item">
+      <input type="checkbox" value="${item}" ${selSet.has(item)?'checked':''} onchange="${onChangeFn}('${ddId}')">
+      ${item}
+    </label>`).join('') +
+    `<div class="ms-clear" onclick="clearMultiSelect('${ddId}')">✕ ล้างทั้งหมด</div>`;
+}
+
+function updateLabel(btnId, lblId, selSet, placeholder) {
+  const lbl = document.getElementById(lblId);
+  const btn = document.getElementById(btnId);
+  if (selSet.size === 0) {
+    lbl.textContent = placeholder;
+    btn.classList.remove('active');
+  } else if (selSet.size === 1) {
+    lbl.textContent = [...selSet][0];
+    btn.classList.add('active');
+  } else {
+    lbl.textContent = `${selSet.size} รายการ`;
+    btn.classList.add('active');
+  }
+}
+
+function toggleDropdown(id) {
+  const dd = document.getElementById('dd'+id);
+  dd.classList.toggle('open');
+  // Close other dropdowns
+  ['ST','P'].forEach(other => {
+    if (other !== id) document.getElementById('dd'+other).classList.remove('open');
+  });
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.ms-wrap')) {
+    document.querySelectorAll('.ms-dropdown').forEach(d => d.classList.remove('open'));
+  }
+});
+
+function onCheckST(ddId) {
+  selST = new Set([...document.querySelectorAll('#ddST input:checked')].map(i=>i.value));
+  updateLabel('btnST','lblST',selST,'— ทั้งหมด —');
+  refreshShopNames();
+  onPartner();
+}
+
+function onCheckP(ddId) {
+  selP = new Set([...document.querySelectorAll('#ddP input:checked')].map(i=>i.value));
+  updateLabel('btnP','lblP',selP,'— ทั้งหมด —');
+  onPartner();
+}
+
+function clearMultiSelect(ddId) {
+  document.querySelectorAll(`#${ddId} input`).forEach(i=>i.checked=false);
+  if (ddId==='ddST') { selST=new Set(); updateLabel('btnST','lblST',selST,'— ทั้งหมด —'); refreshShopNames(); }
+  if (ddId==='ddP')  { selP=new Set();  updateLabel('btnP','lblP',selP,'— ทั้งหมด —'); }
+  render();
+}
+
+function initShopType() {
+  const types = AGG.shopTypes || [];
+  buildDropdown('ddST', types, selST, 'onCheckST');
+}
+
+function refreshShopNames() {
+  const rgn = document.getElementById('fR').value;
+  let pts = [];
+  if (selST.size > 0 && AGG.stPtn) {
+    const s = new Set();
+    selST.forEach(st => (AGG.stPtn[st]||[]).forEach(p => s.add(p)));
+    pts = [...s].sort();
+    if (rgn) pts = pts.filter(p => (AGG.rp[rgn]||[]).includes(p));
+  } else if (rgn) {
+    pts = AGG.rp[rgn] || [];
+  } else {
+    pts = Object.values(AGG.rp).flat().filter((v,i,a)=>a.indexOf(v)===i).sort();
+  }
+  // Keep existing selections that are still valid
+  selP = new Set([...selP].filter(p => pts.includes(p)));
+  buildDropdown('ddP', pts, selP, 'onCheckP');
+  updateLabel('btnP','lblP',selP,'— ทั้งหมด —');
+}
+
+function onShopType() { /* legacy — not used */ }
+
+function initRegion() {
+  const s = document.getElementById('fR');
+  s.innerHTML = '<option value="">— ทั้งหมด —</option>' +
+    Object.keys(AGG.region).sort().map(r=>`<option>${r}</option>`).join('');
+}
+
+function onRegion() {
+  refreshShopNames();
+  onPartner();
+}
+
+function onPartner() {
+  const rgn  = document.getElementById('fR').value;
+  const sSel = document.getElementById('fS');
+  // Determine which shops to get sales from
+  let shops = [];
+  if (selP.size > 0) {
+    shops = [...selP];
+  } else if (rgn) {
+    shops = AGG.rp[rgn] || [];
+  } else {
+    // All shops — use keys of ps
+    shops = Object.keys(AGG.ps);
+  }
+  const s = new Set();
+  shops.forEach(p => (AGG.ps[p]||[]).forEach(sl => s.add(sl)));
+  const sales = [...s].sort();
+  sSel.innerHTML = '<option value="">— ทั้งหมด —</option>' +
+    sales.slice(0, 150).map(sl=>`<option>${sl}</option>`).join('');
+  render();
+}
+
+function resetF() {
+  document.getElementById('fR').value = '';
+  selST = new Set(); selP = new Set();
+  updateLabel('btnST','lblST',selST,'— ทั้งหมด —');
+  updateLabel('btnP','lblP',selP,'— ทั้งหมด —');
+  document.querySelectorAll('#ddST input, #ddP input').forEach(i=>i.checked=false);
+  document.getElementById('fS').value = '';
+  onRegion();
+}
+
+// ── To-Do List ──
+let todoFiltered = [];
+let todoCurrent  = 'all';
+let todoPage     = 1;
+const TODO_PAGE_SIZE = 20;
+
+function initTodo() {
+  if (typeof TODO === 'undefined') return;
+  document.getElementById('todoAsOf').textContent  = TODO.asOf   || '—';
+  document.getElementById('todoTotal').textContent = (TODO.summary.total || 0).toLocaleString();
+  document.getElementById('bcritical').textContent = TODO.summary.critical  || 0;
+  document.getElementById('bhigh').textContent     = TODO.summary.high      || 0;
+  document.getElementById('bmedium').textContent   = TODO.summary.medium    || 0;
+  document.getElementById('bschedule').textContent = TODO.summary.schedule  || 0;
+
+  const regions = [...new Set(TODO.items.map(t=>t.rgn).filter(Boolean))].sort();
+  const rSel = document.getElementById('todoRegionFilter');
+  rSel.innerHTML = '<option value="">— Region ทั้งหมด —</option>' +
+    regions.map(r=>`<option>${r}</option>`).join('');
+
+  const sales = [...new Set(TODO.items.map(t=>t.sal).filter(Boolean))].sort();
+  const sSel = document.getElementById('todoSaleFilter');
+  sSel.innerHTML = '<option value="">— Sale ทั้งหมด —</option>' +
+    sales.slice(0,60).map(s=>`<option>${s}</option>`).join('');
+
+  // Partner filter
+  const partners = [...new Set(TODO.items.map(t=>t.ptn).filter(Boolean))].sort();
+  const ptnSel = document.getElementById('todoPartnerFilter');
+  ptnSel.innerHTML = '<option value="">— Partner ทั้งหมด —</option>' +
+    partners.map(p=>`<option>${p}</option>`).join('');
+
+  // APPOINT_DAY filter — unique dates sorted descending (most recent first)
+  const appoints = [...new Set(TODO.items.map(t=>t.appoint).filter(Boolean))].sort((a,b)=>{
+    const [da,ma,ya] = a.split('/'); const [db,mb,yb] = b.split('/');
+    return new Date(yb,mb-1,db) - new Date(ya,ma-1,da);
+  });
+  const apptSel = document.getElementById('todoAppointFilter');
+  apptSel.innerHTML = '<option value="">— วันนัด (APPOINT_DAY) ทั้งหมด —</option>' +
+    appoints.map(d=>`<option>${d}</option>`).join('');
+
+  filterTodo('all');
+}
+
+function filterTodo(priority) {
+  todoCurrent = priority;
+  todoPage = 1;
+  document.querySelectorAll('.todo-badge').forEach(b=>b.style.opacity='0.55');
+  if(event&&event.target) event.target.closest('.todo-badge').style.opacity='1';
+  searchTodo();
+}
+
+function searchTodo() {
+  if (typeof TODO === 'undefined') return;
+  const q    = (document.getElementById('todoSearch').value||'').toLowerCase();
+  const rgn  = document.getElementById('todoRegionFilter').value;
+  const ptn  = document.getElementById('todoPartnerFilter').value;
+  const appt = document.getElementById('todoAppointFilter').value;
+  const sal  = document.getElementById('todoSaleFilter').value;
+  todoFiltered = TODO.items.filter(t => {
+    if (todoCurrent !== 'all' && t.pri !== todoCurrent) return false;
+    if (rgn  && t.rgn    !== rgn)  return false;
+    if (ptn  && t.ptn    !== ptn)  return false;
+    if (appt && t.appoint !== appt) return false;
+    if (sal  && t.sal    !== sal)  return false;
+    if (q) {
+      const hay = [t.asset,t.ptn,t.sal,t.handler,t.subcon,t.promo,t.rgn,t.appoint].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  todoPage = 1;
+  renderTodoTable();
+}
+
+const PRI_DOT   = {critical:'dot-critical',high:'dot-high',medium:'dot-medium',schedule:'dot-schedule'};
+const PRI_LABEL = {critical:'เร่งด่วนมาก',high:'เร่งด่วน',medium:'ติดตาม',schedule:'นัดล่วงหน้า'};
+
+function renderTodoTable() {
+  const body  = document.getElementById('todoBody');
+  const total = todoFiltered.length;
+  const pages = Math.max(1, Math.ceil(total/TODO_PAGE_SIZE));
+  todoPage = Math.min(Math.max(todoPage,1), pages);
+  const start = (todoPage-1)*TODO_PAGE_SIZE;
+  const slice = todoFiltered.slice(start, start+TODO_PAGE_SIZE);
+
+  document.getElementById('todoCount').textContent =
+    `แสดง ${start+1}–${Math.min(start+TODO_PAGE_SIZE,total)} จาก ${total.toLocaleString()} รายการ`;
+  document.getElementById('pageInfo').textContent  = `หน้า ${todoPage} / ${pages}`;
+  document.getElementById('btnPrev').disabled = todoPage <= 1;
+  document.getElementById('btnNext').disabled = todoPage >= pages;
+
+  if (!slice.length) {
+    body.innerHTML = '<tr><td colspan="11" class="todo-empty">ไม่พบรายการ</td></tr>';
+    return;
+  }
+  body.innerHTML = slice.map((t,i) => {
+    const ageLabel = t.age>0
+      ? `<span style="color:${t.age>=7?'#c0392b':t.age>=3?'#c47b0a':'#6b7280'};font-weight:600;">${t.age} วัน</span>`
+      : t.age===0 ? '<span style="color:#0f7c5a;font-weight:600;">วันนี้</span>'
+      : `<span style="color:#1a6fb5;">อีก ${Math.abs(t.age)} วัน</span>`;
+    return `<tr>
+      <td style="color:var(--text3);text-align:center;">${start+i+1}</td>
+      <td><span class="pri-dot ${PRI_DOT[t.pri]||''}"></span>${PRI_LABEL[t.pri]||t.pri}</td>
+      <td><span class="asset-chip">${t.asset}</span></td>
+      <td>${t.appoint}</td>
+      <td style="text-align:center;">${ageLabel}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;" title="${t.ptn}">${t.ptn}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;" title="${t.rgn}">${t.rgn}</td>
+      <td>${t.sal}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;" title="${t.promo}">${t.promo}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;" title="${t.handler}">${t.handler}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${t.subcon}">${t.subcon}</td>
+    </tr>`;
+  }).join('');
+}
+
+function changePage(dir) { todoPage += dir; renderTodoTable(); }
+
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', initTodo);
+initShopType();
+initRegion();
+refreshShopNames();
+onPartner();
+</script>
+
+</body>
+</html>
